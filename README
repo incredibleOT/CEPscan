@@ -1,0 +1,3 @@
+This program should perform a scan of the Higgs-Yukawa model as described in Philipp's 
+thesis chapter 4 with the inclusion of anti-perdiodic boundary conditions in time to 
+scan the phase structure for the case of finite temperature.
