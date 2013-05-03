@@ -86,9 +86,9 @@ class constrainedEffectivePotential
 	//versions of computing the gradient only
 	void computeFermionicContribution_onlyGradient_qad( double magnetization, double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds);
 	
-// 	void computeConstrainedEffectivePotential_FunctionAndGradient( double magnetization, double staggeredMagnetization, double &dU_ov_dm, double &du_ov_ds);
-	//versions of computing the gradient only
-// 	void computeConstrainedEffectivePotential_FunctionAndGradient_qad( double magnetization, double staggeredMagnetization, double &dU_ov_dm, double &du_ov_ds);
+	void computeConstrainedEffectivePotential_FunctionAndGradient(double magnetization, double staggeredMagnetization, double &U, double &dU_ov_dm, double &dU_ov_ds);
+	//versions of computing function and gradient
+	void computeFermionicContribution_FunctionAndGradient_qad(double magnetization, double staggeredMagnetization, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
 	
 	
 

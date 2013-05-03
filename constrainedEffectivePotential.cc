@@ -2,7 +2,7 @@
 
 #include "constrainedEffectivePotential_computeFunctionOnly.cc"
 #include "constrainedEffectivePotential_computeGradientOnly.cc"
-#include "constrainedEffectivePotential_FunctionAndGradient.cc"
+#include "constrainedEffectivePotential_computeFunctionAndGradient.cc"
 
 constrainedEffectivePotential::constrainedEffectivePotential(int l0, int l1, int l2, int l3, bool antiL3):
 L0(l0), L1(l1), L2(l2), L3(l3), antiperiodicBC_L3(antiL3),

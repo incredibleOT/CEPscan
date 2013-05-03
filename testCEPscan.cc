@@ -34,8 +34,8 @@ int main(int narg,char **arg)
 	CEP.set_kappa_N(kappa);
 	CEP.set_lambda_N(lambda);
 	
-	double mCentral=1.0;
-	double sCentral=1.0;
+	double mCentral=0.2;
+	double sCentral=0.4;
 	double mStep=0.0001;
 	double sStep=0.0001;
 	int steps=5;
@@ -45,6 +45,7 @@ int main(int narg,char **arg)
 	double *resultsSvar = new double [maxCounter];
 	double m,s;
 	
+	//test derivative
 	for(int im=0; im<maxCounter; ++im)
 	{
 		m=mCentral-mStep*(steps-im);
@@ -79,8 +80,18 @@ int main(int narg,char **arg)
 	delete [] resultsMvar;
 	delete [] resultsSvar;
 	
+	//now use the function that computes teh function and the derivative at the same time
 	
-	
+	double U(0.0),U_dm(0.0),U_ds(0.0);
+	for(int im=0; im<maxCounter; ++im)
+	{
+		m=mCentral-mStep*(steps-im);
+		CEP.computeConstrainedEffectivePotential_FunctionAndGradient(m,sCentral, U, U_dm, U_ds);
+		cout <<"m="<<m <<"  s=" <<sCentral <<"    U(m,s) = " <<U <<"   dU/dm = " <<U_dm <<"   dU/ds = " <<U_ds <<endl;
+		s=sCentral-sStep*(steps-im);
+		CEP.computeConstrainedEffectivePotential_FunctionAndGradient(mCentral,s, U, U_dm, U_ds);
+		cout <<"m="<<mCentral <<"  s=" <<s <<"    U(m,s) = " <<U <<"   dU/dm = " <<U_dm <<"   dU/ds = " <<U_ds <<endl;
+	}
 
 
 }
