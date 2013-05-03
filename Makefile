@@ -9,7 +9,8 @@ CXXFLAGS= -Wall -Wextra -Wno-long-long -pedantic
 
 OFILES = constrainedEffectivePotential.o
 
-effPotFiles=  effectivePotential_computePropagatorSum.cc effectivePotential_getFermionicContribution.cc effectivePotential.h
+
+CEPFiles= constrainedEffectivePotential_computeFunctionOnly.cc constrainedEffectivePotential_computeGradientOnly.cc
 
 INCL=-I/opt/products/gsl/1.15/include
 # ##########################################
@@ -26,5 +27,5 @@ testCEPscan.o: testCEPscan.cc ${OFILES}
 ###########################################3
 ###   OFILE   ###
 
-constrainedEffectivePotential.o: constrainedEffectivePotential.cc constrainedEffectivePotential.h
+constrainedEffectivePotential.o: constrainedEffectivePotential.cc constrainedEffectivePotential.h ${CEPFiles}
 	${CXX} ${CXXFLAGS} ${INCL} -c -o $@ $<

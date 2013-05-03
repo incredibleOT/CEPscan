@@ -68,6 +68,7 @@ class constrainedEffectivePotential
 // 	private: NOTE make private in the end
 	void fillLatticeMomenta();
 
+	//computation of eigenvalues
 	std::complex< double > computeAnalyticalEigenvalue(double p0, double p1, double p2, double p3);
 	//computes eigenvalues from the index and uses the arrays to not compute the sins
 	std::complex< double > computeAnalyticalEigenvalue_fromIndex(int l0, int l1, int l2, int l3);
@@ -75,7 +76,21 @@ class constrainedEffectivePotential
 	void computeAnalyticalEigenvalue_fromIndex_pAndVarP(int l0, int l1, int l2, int l3, std::complex< double > &nuOfP, std::complex< double > &nuOfVarP);
 	
 	
-	double computeConstrainedEffectivePotential_qad( double magnetization, double staggeredMagnetization );
+	double computeConstrainedEffectivePotential_onlyFunction(double magnetization, double staggeredMagnetization);
+	//versions of computing the function only
+	//computation of the fermionic contribution
+	//just computes the sum of logs as in philipp's thesis 4.35
+	double computeFermionicContribution_onlyFunction_qad(double magnetization, double staggeredMagnetization);
+	
+	void computeConstrainedEffectivePotential_onlyGradient( double magnetization, double staggeredMagnetization, double &dU_ov_dm, double &dU_ov_ds);
+	//versions of computing the gradient only
+	void computeFermionicContribution_onlyGradient_qad( double magnetization, double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds);
+	
+// 	void computeConstrainedEffectivePotential_FunctionAndGradient( double magnetization, double staggeredMagnetization, double &dU_ov_dm, double &du_ov_ds);
+	//versions of computing the gradient only
+// 	void computeConstrainedEffectivePotential_FunctionAndGradient_qad( double magnetization, double staggeredMagnetization, double &dU_ov_dm, double &du_ov_ds);
+	
+	
 
 // 	void computeConstrainedEffectivePotential_gradient_qad( double magnetization, double staggeredMagnetization, double &result_magnetization, double &result_staggered );
 

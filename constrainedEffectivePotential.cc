@@ -1,6 +1,8 @@
 #include "constrainedEffectivePotential.h"
 
-
+#include "constrainedEffectivePotential_computeFunctionOnly.cc"
+#include "constrainedEffectivePotential_computeGradientOnly.cc"
+#include "constrainedEffectivePotential_FunctionAndGradient.cc"
 
 constrainedEffectivePotential::constrainedEffectivePotential(int l0, int l1, int l2, int l3, bool antiL3):
 L0(l0), L1(l1), L2(l2), L3(l3), antiperiodicBC_L3(antiL3),
@@ -175,64 +177,4 @@ void constrainedEffectivePotential::computeAnalyticalEigenvalue_fromIndex_pAndVa
 	
 }
 
-double constrainedEffectivePotential::computeConstrainedEffectivePotential_qad( double magnetization, double staggeredMagnetization )
-{
-	//eq 4.35 philipp's thesis
-	//U= -8*(m^2-s^2) + m^2 + s^2 +lambda*( m^4 + s^4 + 6*m^2s^2 - 2*(  
-	double result(0.0);
-	double mSq=magnetization*magnetization;
-	double sSq=staggeredMagnetization*staggeredMagnetization;
-	
-	//naive
-	const double two_PI(atan(1) * 8.0);
-	double one_ov_L0(1.0/L0);
-	double one_ov_L1(1.0/L1);
-	double one_ov_L2(1.0/L2);
-	double one_ov_L3(1.0/L3);
-	double toAddForL3 = antiperiodicBC_L3 ? two_PI/(2.0*L3) : 0.0;
-	
-	double dummyForAddition(0.0), dummyForMultiplication(1.0);
-	for(int l0=0; l0<L0; ++l0)
-	{
-		double p0 = two_PI * l0 * one_ov_L0 ; //2*pi*n/L
-		double varp0 = two_PI * ((l0+L0/2)%L0) * one_ov_L0;
-		for(int l1=0; l1<L1; ++l1)
-		{
-			double p1 = two_PI * l1 * one_ov_L1 ;
-			double varp1 = two_PI * ((l1+L1/2)%L1) * one_ov_L1;
-			for(int l2=0; l2<L2; ++l2)
-			{
-				double p2 = two_PI * l2 * one_ov_L2 ;
-				double varp2 = two_PI * ((l2+L2/2)%L2) * one_ov_L2;
-				for(int l3=0; l3<L3; ++l3)
-				{
-					double p3 = two_PI * l3 * one_ov_L3 + toAddForL3;
-					double varp3 = two_PI * ((l3+L3/2)%L3) * one_ov_L3 + toAddForL3;
-					std::complex< double > ew_1( computeAnalyticalEigenvalue( p0,p1,p2,p3 ) );
-					std::complex< double > ew_var1( computeAnalyticalEigenvalue( varp0,varp1,varp2,varp3 ) );
-					std::complex< double > ew_2(0.,0.), ew_var2(0.,0.);
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, ew_2, ew_var2 );
-					if(std::abs(1.0 - ew_1/ew_2) >1.0e-14 || std::abs(1.0 - ew_var1/ew_var2) >1.0e-14)
-					{ 
-						std::cout <<"l0=" <<l0 <<"   l1=" <<l1 <<"   l2=" <<l2 <<"   l3=" <<l3 <<std::endl;;
-						std::cout <<"directEVcomputation:  nu(p)=" <<ew_1 <<"   nu(var(p))="<<ew_var1 <<std::endl; 
-						std::cout <<"indexEVcomputation:   nu(p)=" <<ew_2 <<"   nu(var(p))="<<ew_var2 <<std::endl;
-						std::cout <<"ratio for nu(p)=" <<ew_1/ew_2 <<"    for nu(var(p))=" <<ew_var1/ew_var2 <<std::endl;
-					}
-				}
-			}
-		}
-	}
-	
-	return 0;
-
-
-}
-
-
-// void constrainedEffectivePotential::computeConstrainedEffectivePotential_gradient_qad( double magnetization, double staggeredMagnetization, double &result_magnetization, double &result_staggered );
-
-
-// void constrainedEffectivePotential::computeConstrainedEffectivePotential_and_gradient_qad( double magnetization, double staggeredMagnetization, double &resultCEP, double &result_magnetization, double &result_staggered );
-	
 
