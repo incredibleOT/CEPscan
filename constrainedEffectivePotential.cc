@@ -21,7 +21,7 @@ minimizer(NULL)
 		exit(EXIT_FAILURE);
 	}
 	fillLatticeMomenta();
-	if(L0==L1 && L0==L2){ fillEigenvalues(); }
+	fillEigenvalues(); 
 }
 
 
@@ -97,548 +97,611 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 
 void constrainedEffectivePotential::fillEigenvalues()
 {
+	delete [] absNuP;
+	delete [] absNuVarP;
+	delete [] absGammaP;
+	delete [] absGammaVarP;
+	delete [] factorOfMomentum;
 	if(!(L0==L1 && L0==L2))
 	{
-		std::cerr <<"Error, no L^3xL_t lattice in constrainedEffectivePotential::fillEigenvalues()" <<std::endl;
-		exit(EXIT_FAILURE);
-	}
-	int Lhalf=L0/2;
-	int LT_half=L3/2;
-	int counter=0;
-	//do it twice to count
-	for(int l3=1; l3<LT_half; ++l3)
-	{
-		for(int l0=1; l0<Lhalf; ++l0)
+// 		int dummyVolume=L0*L1*L2*L3;
+// 		if(dummyVolume<0)
+// 		{
+// 			std::cerr <<"Error, volume too large for int." <<std::endl;
+// 			exit(EXIT_FAILURE); 
+// 		}
+		int L0_half=L0/2;
+		int L1_half=L1/2;
+		int L2_half=L2/2;
+		int L3_half=L3/2;
+		int dummyVolume(0);
+		if(antiperiodicBC_L3)
 		{
-			for(int l1=l0+1; l1<Lhalf; ++l1)
-			{
-				for(int l2=l1+1; l2<Lhalf; ++l2)
-				{
-					//p,q,r 48
-					++counter;
-				}
-				{
-					int l2=l1;
-					//p,q,q, 24
-					++counter;
-					l2=l0;
-					//p,p,q, 24
-					++counter;
-					l2=Lhalf;
-					//p,q,L/2 24
-					++counter;
-					l2=0;
-					//0,p,q, 24
-					++counter;
-				}
-			}
-			{
-				int l1=l0;
-				{
-					int l2=l1;
-					//p,p,p, 8
-					++counter;
-					l2=Lhalf;
-					//p,p,L/2 12
-					++counter;
-					l2=0;
-					//0,p,p, 12
-					++counter;
-				}
-				l1=Lhalf;
-				{
-					int l2=Lhalf;
-					//p,L/2,L/2, 6
-					++counter;
-					l2=0;
-					//0,p,L/2, 12
-					++counter;
-				}
-				l1=0;
-				{
-					int l2=0;
-					//0,0,p  6
-					++counter;
-				}
-			}
+			dummyVolume=(L0_half+1)*(L1_half+1)*(L2_half+1)*(L3_half);
 		}
+		else
 		{
-			int l0=Lhalf;
+			dummyVolume=(L0_half+1)*(L1_half+1)*(L2_half+1)*(L3_half+1);
+		}
+		numberOfDistingtMomenta=dummyVolume;
+		std::cout <<"numberOfDistingtMomenta: "<<numberOfDistingtMomenta <<std::endl;
+		absNuP = new double [dummyVolume];
+		absNuVarP = new double [dummyVolume];
+		absGammaP = new double [dummyVolume];
+		absGammaVarP = new double [dummyVolume];
+		factorOfMomentum = new double [dummyVolume];
+		double fac_l0,fac_l1,fac_l2,fac_l3;
+		std::complex< double > nuOfP(0.,0.), nuOfVarP(0.,0.);
+		size_t counter=0;
+		for(int l0=0; l0<=L0_half; ++l0)
+		{
+			if(l0==0 || l0==L0_half){ fac_l0=1.0; }else{ fac_l0=2.0; }
+			for(int l1=0; l1<=L1_half; ++l1)
 			{
-				int l1=Lhalf;
+				if(l1==0 || l1==L1_half){ fac_l1=1.0; }else{ fac_l1=2.0; }
+				for(int l2=0; l2<=L2_half; ++l2)
 				{
-					int l2=Lhalf;
-					//L/2,L/2,L/2, 1
-					++counter;
-					l2=0;
-					//0,L/2,L/2, 3
-					++counter;
-				}
-				l1=0;
-				{
-					int l2=0;
-					//0,0,L/2, 3
-					++counter;
-				}
-			}
-			l0=0;
-			{
-				int l1=0;
-				{
-					int l2=0;
-					//0,0,0, 1
-					++counter;
+					if(l2==0 || l2==L2_half){ fac_l2=1.0; }else{ fac_l2=2.0; }
+					for(int l3=0; l3<=L3_half; ++l3)
+					{
+						if(!antiperiodicBC_L3 &&( l3==0 || l3==L3_half) ){ fac_l3=1.0; }
+						else if(!antiperiodicBC_L3 && !( l3==0 || l3==L3_half) ){ fac_l3=2.0; }
+						else if(antiperiodicBC_L3 && l3==L3_half){ continue; }
+						else{ fac_l3=2.0; }
+						
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = fac_l0*fac_l1*fac_l2*fac_l3;
+						++counter;
+					}
 				}
 			}
 		}
 	}
-	//now do the same thing for l3=0 and l3=Lt_half
-	for(int l3=0; l3<=LT_half; l3+=(antiperiodicBC_L3 ? LT_half*2 :LT_half))
+	else
 	{
-		for(int l0=1; l0<Lhalf; ++l0)
+		int Lhalf=L0/2;
+		int LT_half=L3/2;
+		size_t counter=0;
+		//do it twice to count
+		for(int l3=1; l3<LT_half; ++l3)
 		{
-			for(int l1=l0+1; l1<Lhalf; ++l1)
+			for(int l0=1; l0<Lhalf; ++l0)
 			{
-				for(int l2=l1+1; l2<Lhalf; ++l2)
+				for(int l1=l0+1; l1<Lhalf; ++l1)
 				{
-					//p,q,r 48
-					++counter;
+					for(int l2=l1+1; l2<Lhalf; ++l2)
+					{
+						//p,q,r 48
+						++counter;
+					}
+					{
+						int l2=l1;
+						//p,q,q, 24
+						++counter;
+						l2=l0;
+						//p,p,q, 24
+						++counter;
+						l2=Lhalf;
+						//p,q,L/2 24
+						++counter;
+						l2=0;
+						//0,p,q, 24
+						++counter;
+					}
 				}
 				{
-					int l2=l1;
-					//p,q,q, 24
-					++counter;
-					l2=l0;
-					//p,p,q, 24
-					++counter;
-					l2=Lhalf;
-					//p,q,L/2 24
-					++counter;
-					l2=0;
-					//0,p,q, 24
-					++counter;
+					int l1=l0;
+					{
+						int l2=l1;
+						//p,p,p, 8
+						++counter;
+						l2=Lhalf;
+						//p,p,L/2 12
+						++counter;
+						l2=0;
+						//0,p,p, 12
+						++counter;
+					}
+					l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//p,L/2,L/2, 6
+						++counter;
+						l2=0;
+						//0,p,L/2, 12
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						//0,0,p  6
+						++counter;
+					}
 				}
 			}
 			{
-				int l1=l0;
+				int l0=Lhalf;
 				{
-					int l2=l1;
-					//p,p,p, 8
-					++counter;
-					l2=Lhalf;
-					//p,p,L/2 12
-					++counter;
-					l2=0;
-					//0,p,p, 12
-					++counter;
+					int l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//L/2,L/2,L/2, 1
+						++counter;
+						l2=0;
+						//0,L/2,L/2, 3
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						//0,0,L/2, 3
+						++counter;
+					}
 				}
-				l1=Lhalf;
+				l0=0;
 				{
-					int l2=Lhalf;
-					//p,L/2,L/2, 6
-					++counter;
-					l2=0;
-					//0,p,L/2, 12
-					++counter;
-				}
-				l1=0;
-				{
-					int l2=0;
-					//0,0,p  6
-					++counter;
+					int l1=0;
+					{
+						int l2=0;
+						//0,0,0, 1
+						++counter;
+					}
 				}
 			}
 		}
+		//now do the same thing for l3=0 and l3=Lt_half
+		for(int l3=0; l3<=LT_half; l3+=(antiperiodicBC_L3 ? LT_half*2 :LT_half))
 		{
-			int l0=Lhalf;
+			for(int l0=1; l0<Lhalf; ++l0)
 			{
-				int l1=Lhalf;
+				for(int l1=l0+1; l1<Lhalf; ++l1)
 				{
-					int l2=Lhalf;
-					//L/2,L/2,L/2, 1
-					++counter;
-					l2=0;
-					//0,L/2,L/2, 3
-					++counter;
+					for(int l2=l1+1; l2<Lhalf; ++l2)
+					{
+						//p,q,r 48
+						++counter;
+					}
+					{
+						int l2=l1;
+						//p,q,q, 24
+						++counter;
+						l2=l0;
+						//p,p,q, 24
+						++counter;
+						l2=Lhalf;
+						//p,q,L/2 24
+						++counter;
+						l2=0;
+						//0,p,q, 24
+						++counter;
+					}
 				}
-				l1=0;
 				{
-					int l2=0;
-					//0,0,L/2, 3
-					++counter;
+					int l1=l0;
+					{
+						int l2=l1;
+						//p,p,p, 8
+						++counter;
+						l2=Lhalf;
+						//p,p,L/2 12
+						++counter;
+						l2=0;
+						//0,p,p, 12
+						++counter;
+					}
+					l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//p,L/2,L/2, 6
+						++counter;
+						l2=0;
+						//0,p,L/2, 12
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						//0,0,p  6
+						++counter;
+					}
 				}
 			}
-			l0=0;
 			{
-				int l1=0;
+				int l0=Lhalf;
 				{
-					int l2=0;
-					//0,0,0, 1
-					++counter;
+					int l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//L/2,L/2,L/2, 1
+						++counter;
+						l2=0;
+						//0,L/2,L/2, 3
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						//0,0,L/2, 3
+						++counter;
+					}
+				}
+				l0=0;
+				{
+					int l1=0;
+					{
+						int l2=0;
+						//0,0,0, 1
+						++counter;
+					}
 				}
 			}
 		}
-	}
-	numberOfDistingtMomenta=counter;
-	std::cout <<"numberOfDistingtMomenta: "<<numberOfDistingtMomenta <<std::endl;
-	absNuP = new double [numberOfDistingtMomenta];
-	absNuVarP = new double [numberOfDistingtMomenta];
-	absGammaP = new double [numberOfDistingtMomenta];
-	absGammaVarP = new double [numberOfDistingtMomenta];
-	factorOfMomentum = new double [numberOfDistingtMomenta];
-	std::complex< double > nuOfP(0.,0.), nuOfVarP(0.,0.);
-	//factor has to be doubled due to l3
-	counter=0;
-	for(int l3=1; l3<LT_half; ++l3)
-	{
-		for(int l0=1; l0<Lhalf; ++l0)
+		numberOfDistingtMomenta=counter;
+		std::cout <<"numberOfDistingtMomenta: "<<numberOfDistingtMomenta <<std::endl;
+		//delete first
+		absNuP = new double [numberOfDistingtMomenta];
+		absNuVarP = new double [numberOfDistingtMomenta];
+		absGammaP = new double [numberOfDistingtMomenta];
+		absGammaVarP = new double [numberOfDistingtMomenta];
+		factorOfMomentum = new double [numberOfDistingtMomenta];
+		std::complex< double > nuOfP(0.,0.), nuOfVarP(0.,0.);
+		//factor has to be doubled due to l3
+		counter=0;
+		for(int l3=1; l3<LT_half; ++l3)
 		{
-			for(int l1=l0+1; l1<Lhalf; ++l1)
+			for(int l0=1; l0<Lhalf; ++l0)
 			{
-				for(int l2=l1+1; l2<Lhalf; ++l2)
+				for(int l1=l0+1; l1<Lhalf; ++l1)
 				{
-					//p,q,r 48
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 96.0;
-					++counter;
+					for(int l2=l1+1; l2<Lhalf; ++l2)
+					{
+						//p,q,r 48
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 96.0;
+						++counter;
+					}
+					{
+						int l2=l1;
+						//p,q,q, 24
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 48.0;
+						++counter;
+						l2=l0;
+						//p,p,q, 24
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 48.0;
+						++counter;
+						l2=Lhalf;
+						//p,q,L/2 24
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 48.0;
+						++counter;
+						l2=0;
+						//0,p,q, 24
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 48.0;
+						++counter;
+					}
 				}
 				{
-					int l2=l1;
-					//p,q,q, 24
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 48.0;
-					++counter;
-					l2=l0;
-					//p,p,q, 24
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 48.0;
-					++counter;
-					l2=Lhalf;
-					//p,q,L/2 24
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 48.0;
-					++counter;
-					l2=0;
-					//0,p,q, 24
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 48.0;
-					++counter;
+					int l1=l0;
+					{
+						int l2=l1;
+						//p,p,p, 8
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 16.0;
+						++counter;
+						l2=Lhalf;
+						//p,p,L/2 12
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 24.0;
+						++counter;
+						l2=0;
+						//0,p,p, 12
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 24.0;
+						++counter;
+					}
+					l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//p,L/2,L/2, 6
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 12.0;
+						++counter;
+						l2=0;
+						//0,p,L/2, 12
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 24.0;
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						//0,0,p  6
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 12.0;
+						++counter;
+					}
 				}
 			}
 			{
-				int l1=l0;
+				int l0=Lhalf;
 				{
-					int l2=l1;
-					//p,p,p, 8
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 16.0;
-					++counter;
-					l2=Lhalf;
-					//p,p,L/2 12
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 24.0;
-					++counter;
-					l2=0;
-					//0,p,p, 12
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 24.0;
-					++counter;
+					int l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//L/2,L/2,L/2, 1
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 2.0;
+						++counter;
+						l2=0;
+						//0,L/2,L/2, 3
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 6.0;
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						//0,0,L/2, 3
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 6.0;
+						++counter;
+					}
 				}
-				l1=Lhalf;
+				l0=0;
 				{
-					int l2=Lhalf;
-					//p,L/2,L/2, 6
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 12.0;
-					++counter;
-					l2=0;
-					//0,p,L/2, 12
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 24.0;
-					++counter;
-				}
-				l1=0;
-				{
-					int l2=0;
-					//0,0,p  6
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 12.0;
-					++counter;
+					int l1=0;
+					{
+						int l2=0;
+						//0,0,0, 1
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = 2.0;
+						++counter;
+					}
 				}
 			}
 		}
+		double BC_factor=(antiperiodicBC_L3 ? 2.0 :1.0);
+		//now do the same thing for l3=0 and l3=Lt_half
+		for(int l3=0; l3<=LT_half; l3+=(antiperiodicBC_L3 ? LT_half*2 :LT_half))
 		{
-			int l0=Lhalf;
+			for(int l0=1; l0<Lhalf; ++l0)
 			{
-				int l1=Lhalf;
+				for(int l1=l0+1; l1<Lhalf; ++l1)
 				{
-					int l2=Lhalf;
-					//L/2,L/2,L/2, 1
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 2.0;
-					++counter;
-					l2=0;
-					//0,L/2,L/2, 3
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 6.0;
-					++counter;
+					for(int l2=l1+1; l2<Lhalf; ++l2)
+					{
+						//p,q,r 48
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*48.0;
+						++counter;
+					}
+					{
+						int l2=l1;
+						//p,q,q, 24
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*24.0;
+						++counter;
+						l2=l0;
+						//p,p,q, 24
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*24.0;
+						++counter;
+						l2=Lhalf;
+						//p,q,L/2 24
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*24.0;
+						++counter;
+						l2=0;
+						//0,p,q, 24
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*24.0;
+						++counter;
+					}
 				}
-				l1=0;
 				{
-					int l2=0;
-					//0,0,L/2, 3
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 6.0;
-					++counter;
+					int l1=l0;
+					{
+						int l2=l1;
+						//p,p,p, 8
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*8.0;
+						++counter;
+						l2=Lhalf;
+						//p,p,L/2 12
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*12.0;
+						++counter;
+						l2=0;
+						//0,p,p, 12
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*12.0;
+						++counter;
+					}
+					l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//p,L/2,L/2, 6
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*6.0;
+						++counter;
+						l2=0;
+						//0,p,L/2, 12
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*12.0;
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						//0,0,p  6
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*6.0;
+						++counter;
+					}
 				}
 			}
-			l0=0;
 			{
-				int l1=0;
+				int l0=Lhalf;
 				{
-					int l2=0;
-					//0,0,0, 1
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = 2.0;
-					++counter;
+					int l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//L/2,L/2,L/2, 1
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*1.0;
+						++counter;
+						l2=0;
+						//0,L/2,L/2, 3
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*3.0;
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						//0,0,L/2, 3
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*3.0;
+						++counter;
+					}
 				}
-			}
-		}
-	}
-	double BC_factor=(antiperiodicBC_L3 ? 2.0 :1.0);
-	//now do the same thing for l3=0 and l3=Lt_half
-	for(int l3=0; l3<=LT_half; l3+=(antiperiodicBC_L3 ? LT_half*2.0 :LT_half))
-	{
-		for(int l0=1; l0<Lhalf; ++l0)
-		{
-			for(int l1=l0+1; l1<Lhalf; ++l1)
-			{
-				for(int l2=l1+1; l2<Lhalf; ++l2)
+				l0=0;
 				{
-					//p,q,r 48
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*48.0;
-					++counter;
-				}
-				{
-					int l2=l1;
-					//p,q,q, 24
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*24.0;
-					++counter;
-					l2=l0;
-					//p,p,q, 24
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*24.0;
-					++counter;
-					l2=Lhalf;
-					//p,q,L/2 24
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*24.0;
-					++counter;
-					l2=0;
-					//0,p,q, 24
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*24.0;
-					++counter;
-				}
-			}
-			{
-				int l1=l0;
-				{
-					int l2=l1;
-					//p,p,p, 8
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*8.0;
-					++counter;
-					l2=Lhalf;
-					//p,p,L/2 12
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*12.0;
-					++counter;
-					l2=0;
-					//0,p,p, 12
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*12.0;
-					++counter;
-				}
-				l1=Lhalf;
-				{
-					int l2=Lhalf;
-					//p,L/2,L/2, 6
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*6.0;
-					++counter;
-					l2=0;
-					//0,p,L/2, 12
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*12.0;
-					++counter;
-				}
-				l1=0;
-				{
-					int l2=0;
-					//0,0,p  6
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*6.0;
-					++counter;
-				}
-			}
-		}
-		{
-			int l0=Lhalf;
-			{
-				int l1=Lhalf;
-				{
-					int l2=Lhalf;
-					//L/2,L/2,L/2, 1
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*1.0;
-					++counter;
-					l2=0;
-					//0,L/2,L/2, 3
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*3.0;
-					++counter;
-				}
-				l1=0;
-				{
-					int l2=0;
-					//0,0,L/2, 3
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*3.0;
-					++counter;
-				}
-			}
-			l0=0;
-			{
-				int l1=0;
-				{
-					int l2=0;
-					//0,0,0, 1
-					computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-					absNuP[counter]=std::abs(nuOfP); 
-					absNuVarP[counter]=std::abs(nuOfVarP);
-					absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-					absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-					factorOfMomentum[counter] = BC_factor*1.0;
-					++counter;
+					int l1=0;
+					{
+						int l2=0;
+						//0,0,0, 1
+						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+						absNuP[counter]=std::abs(nuOfP); 
+						absNuVarP[counter]=std::abs(nuOfVarP);
+						absGammaP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+						absGammaVarP[counter]=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+						factorOfMomentum[counter] = BC_factor*1.0;
+						++counter;
+					}
 				}
 			}
 		}

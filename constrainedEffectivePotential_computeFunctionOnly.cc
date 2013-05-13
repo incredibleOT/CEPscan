@@ -20,23 +20,6 @@ double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyF
 
 
 
-double constrainedEffectivePotential::fermionicContributionInline_onlyFunction(int l0, int l1, int l2, int l3, double ySq_mSq, double ySq_sSq, double factor)
-{
-	std::complex< double > nuOfP(0.,0.), nuOfVarP(0.,0.);
-	double abs_nuOfP, abs_nuOfVarP;
-	double abs_gammaOfP, abs_gammaOfVarP;
-	double a,b;
-	
-	computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
-	abs_nuOfP=std::abs(nuOfP); 
-	abs_nuOfVarP=std::abs(nuOfVarP);
-	abs_gammaOfP=std::abs( 1.0 - one_ov_twoRho*nuOfP );
-	abs_gammaOfVarP=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
-	a = abs_nuOfP*abs_nuOfVarP + (ySq_mSq - ySq_sSq)*abs_gammaOfP*abs_gammaOfVarP;
-	b = abs_gammaOfP*abs_nuOfVarP - abs_nuOfP*abs_gammaOfVarP;
-	return factor*log(a*a + ySq_mSq*b*b);
-}
-
 
 
 double constrainedEffectivePotential::fermionicContributionInline_onlyFunction_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq)
@@ -124,6 +107,49 @@ double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_
 }
 
 
+
+double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization)
+{
+	if(yukawa_N < 0.0)
+	{
+		std::cerr <<"Error, no yukawa coupling set in constrainedEffectivePotential::computeFermionicContribution_onlyFunction_qad(double magnetization, double staggeredMagnetization)" <<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if(yukawa_N==0.0){ return 0.0; }
+	double mSq=magnetization*magnetization;
+	double sSq=staggeredMagnetization*staggeredMagnetization;
+	double ySquared(yukawa_N*yukawa_N);
+	double ySquaredmSquared(ySquared*mSq);
+	double ySquaredsSquared(ySquared*sSq);
+	double dummyForAddition(0.0);
+	
+	for(int index=0; index<numberOfDistingtMomenta; ++index)
+	{
+		dummyForAddition+=fermionicContributionInline_onlyFunction_FromStoredEigenvalues(index, ySquaredmSquared, ySquaredsSquared);
+	}
+	
+	dummyForAddition*=-2.0;
+	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
+	return dummyForAddition;
+}
+
+
+double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params)
+{
+	double magnetization=gsl_vector_get(mags,0);
+	double staggeredMagnetization=gsl_vector_get(mags,1);
+	
+	return computeConstrainedEffectivePotential_onlyFunction(magnetization, staggeredMagnetization);
+}
+
+double wrapper_computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params)
+{
+	constrainedEffectivePotential *CEP = (constrainedEffectivePotential *)params;
+	return CEP->computeConstrainedEffectivePotential_onlyFunction_gsl(mags, NULL);
+}
+
+
+/*
 double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_LcubeTimesLt(const double magnetization, const double staggeredMagnetization)
 {
 // computes U_f
@@ -820,46 +846,25 @@ double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_
 	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
 	return dummyForAddition;
 }
+*/
 
 
-double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization)
+/*
+double constrainedEffectivePotential::fermionicContributionInline_onlyFunction(int l0, int l1, int l2, int l3, double ySq_mSq, double ySq_sSq, double factor)
 {
-	if(yukawa_N < 0.0)
-	{
-		std::cerr <<"Error, no yukawa coupling set in constrainedEffectivePotential::computeFermionicContribution_onlyFunction_qad(double magnetization, double staggeredMagnetization)" <<std::endl;
-		exit(EXIT_FAILURE);
-	}
-	if(yukawa_N==0.0){ return 0.0; }
-	double mSq=magnetization*magnetization;
-	double sSq=staggeredMagnetization*staggeredMagnetization;
-	double ySquared(yukawa_N*yukawa_N);
-	double ySquaredmSquared(ySquared*mSq);
-	double ySquaredsSquared(ySquared*sSq);
-	double dummyForAddition(0.0);
+	std::complex< double > nuOfP(0.,0.), nuOfVarP(0.,0.);
+	double abs_nuOfP, abs_nuOfVarP;
+	double abs_gammaOfP, abs_gammaOfVarP;
+	double a,b;
 	
-	for(int index=0; index<numberOfDistingtMomenta; ++index)
-	{
-		dummyForAddition+=fermionicContributionInline_onlyFunction_FromStoredEigenvalues(index, ySquaredmSquared, ySquaredsSquared);
-	}
-	
-	dummyForAddition*=-2.0;
-	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
-	return dummyForAddition;
+	computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
+	abs_nuOfP=std::abs(nuOfP); 
+	abs_nuOfVarP=std::abs(nuOfVarP);
+	abs_gammaOfP=std::abs( 1.0 - one_ov_twoRho*nuOfP );
+	abs_gammaOfVarP=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
+	a = abs_nuOfP*abs_nuOfVarP + (ySq_mSq - ySq_sSq)*abs_gammaOfP*abs_gammaOfVarP;
+	b = abs_gammaOfP*abs_nuOfVarP - abs_nuOfP*abs_gammaOfVarP;
+	return factor*log(a*a + ySq_mSq*b*b);
 }
-
-
-double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params)
-{
-	double magnetization=gsl_vector_get(mags,0);
-	double staggeredMagnetization=gsl_vector_get(mags,1);
-	
-	return computeConstrainedEffectivePotential_onlyFunction(magnetization, staggeredMagnetization);
-}
-
-double wrapper_computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params)
-{
-	constrainedEffectivePotential *CEP = (constrainedEffectivePotential *)params;
-	return CEP->computeConstrainedEffectivePotential_onlyFunction_gsl(mags, NULL);
-}
-
+*/
 

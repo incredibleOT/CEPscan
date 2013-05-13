@@ -19,6 +19,19 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyGra
 
 
 
+
+void constrainedEffectivePotential::fermionicContributionInline_onlyGradient_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq, double &dUf_ov_dm, double &dUf_ov_ds)
+{
+	double a,b,one_ov_A;
+	a = absNuP[index]*absNuVarP[index] + (ySq_mSq - ySq_sSq)*absGammaP[index]*absGammaVarP[index];
+	b = absGammaP[index]*absNuVarP[index] - absNuP[index]*absGammaVarP[index];
+	one_ov_A=1.0/(a*a + ySq_mSq*b*b);
+	dUf_ov_dm=(2.0*absGammaP[index]*absGammaVarP[index]*a + b*b)*one_ov_A*factorOfMomentum[index];
+	dUf_ov_ds=(absGammaP[index]*absGammaVarP[index]*a)*one_ov_A*factorOfMomentum[index];
+}
+
+
+
 void constrainedEffectivePotential::computeFermionicContribution_onlyGradient_qad( const double magnetization, const double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds)
 {
 	//U_f = -2/V*sum log[ a^2 + y^2*m^2*b^2 ] = -2/v*sum log[A]
@@ -80,6 +93,51 @@ void constrainedEffectivePotential::computeFermionicContribution_onlyGradient_qa
 	dUf_ov_dm/=static_cast< double >(L0); dUf_ov_dm/=static_cast< double >(L1); dUf_ov_dm/=static_cast< double >(L2); dUf_ov_dm/=static_cast< double >(L3);
 	dUf_ov_ds/=static_cast< double >(L0); dUf_ov_ds/=static_cast< double >(L1); dUf_ov_ds/=static_cast< double >(L2); dUf_ov_ds/=static_cast< double >(L3);
 }
+
+
+
+
+void constrainedEffectivePotential::computeFermionicContribution_onlyGradient_FromStoredEigenvalues( const double magnetization, const double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds)
+{
+	//U_f = -2/V*sum log[ a^2 + y^2*m^2*b^2 ] = -2/v*sum log[A]
+	//a = a(m,s) = |nu(p)|*|nu(varP)| + y^2*(m^2-s^2)*|gamma(p)|*|gamma(varP)|
+	//b = |gamma(p)|*|nu(varP)| - |nu(p)|*|gamma(varP)|
+	//A = a^2 + y^2*m^2*b^2
+	//dU_f/dm = -2/V*sum[ (4*y^2*m * |gamma(p)|*|gamma(varP)|*a + 2*m*y^2*b^2)/(a^2 + y^2*m^2*b^2 ) ] = -4*y^2*m/V * sum[ (2* |gamma(p)|*|gamma(varP)|*a + b^2)/(a^2 + y^2*m^2*b^2 ) ]
+	//dU_f/dm = -4*y^2*m/V * sum[ (2* |gamma(p)|*|gamma(varP)|*a + b^2)/A ]
+	//dU_f/ds = -2/V*sum[ (-4*y^2*s * |gamma(p)|*|gamma(varP)|*a )/(a^2 + y^2*m^2*b^2 ) ] = +8*y^2*s/V * sum[ ( |gamma(p)|*|gamma(varP)|*a )/(a^2 + y^2*m^2*b^2 ) ]
+	//dU_f/ds = 8*y^2*m/V * sum[ ( |gamma(p)|*|gamma(varP)*a|)/A ]
+	if(yukawa_N < 0.0)
+	{
+		std::cerr <<"Error, no yukawa coupling set in constrainedEffectivePotential::computeFermionicContribution_onlyGradient_FromStoredEigenvalues( const double magnetization, const double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds)" <<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	dUf_ov_dm=0.0; dUf_ov_ds=0.0; 
+	if(yukawa_N==0.0){ return; }
+	double mSq=magnetization*magnetization;
+	double sSq=staggeredMagnetization*staggeredMagnetization;
+	double ySquared(yukawa_N*yukawa_N);
+	double ySquaredmSquared(ySquared*mSq);
+	double ySquaredsSquared(ySquared*sSq);
+	
+	double dummyForAddition_dm(0.0), dummyForAddition_ds(0.0);
+	
+	for(int index=0; index<numberOfDistingtMomenta; ++index)
+	{
+		fermionicContributionInline_onlyGradient_FromStoredEigenvalues(index, ySquaredmSquared, ySquaredsSquared, dummyForAddition_dm, dummyForAddition_ds);
+		dUf_ov_dm+=dummyForAddition_dm;
+		dUf_ov_ds+=dummyForAddition_ds;
+	}
+	
+	dUf_ov_dm*=-4.0*ySquared*magnetization;
+	dUf_ov_ds*=8.0*ySquared*staggeredMagnetization;
+	
+	dUf_ov_dm/=static_cast< double >(L0); dUf_ov_dm/=static_cast< double >(L1); dUf_ov_dm/=static_cast< double >(L2); dUf_ov_dm/=static_cast< double >(L3);
+	dUf_ov_ds/=static_cast< double >(L0); dUf_ov_ds/=static_cast< double >(L1); dUf_ov_ds/=static_cast< double >(L2); dUf_ov_ds/=static_cast< double >(L3);
+	
+	return;
+}
+
 
 
 void constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, void *params, gsl_vector *gradient_of_U)

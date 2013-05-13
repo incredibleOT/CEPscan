@@ -102,35 +102,45 @@ class constrainedEffectivePotential
 	//computation of the fermionic contribution
 	//just computes the sum of logs as in philipp's thesis 4.35
 	double computeFermionicContribution_onlyFunction_qad(const double magnetization, const double staggeredMagnetization);
+	
 	//specialized for L^3xL_t
+	/*
 	double computeFermionicContribution_onlyFunction_LcubeTimesLt(const double magnetization, const double staggeredMagnetization);
 	double computeFermionicContribution_onlyFunction_LcubeTimesLt_withInline(const double magnetization, const double staggeredMagnetization);
-	//uses stored values
+	double fermionicContributionInline_onlyFunction(int l0, int l1, int l2, int l3, double ySq_mSq, double ySq_sSq, double factor);
+	*/ //not used 
+	//uses stored values NOTE, this will be used in the end
 	double computeFermionicContribution_onlyFunction_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization);
 	// format gsl likes
 	double computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params);
-	//
-	//
-	double fermionicContributionInline_onlyFunction(int l0, int l1, int l2, int l3, double ySq_mSq, double ySq_sSq, double factor);
+	//for nicer code
+	
 	double fermionicContributionInline_onlyFunction_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq);
 	//wrapper for function to make a pointer below the class
 
 	
-	
+	//computes only the gradient
 	void computeConstrainedEffectivePotential_onlyGradient( const double magnetization, const double staggeredMagnetization, double &dU_ov_dm, double &dU_ov_ds);
-	//versions of computing the gradient only
+	//quick and dirty
 	void computeFermionicContribution_onlyGradient_qad( const double magnetization, const double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds);
+	//faster
+	void computeFermionicContribution_onlyGradient_FromStoredEigenvalues( const double magnetization, const double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds);
 	// format gsl likes
 	void computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, void *params, gsl_vector *gradient_of_U);
-	//inlinefct
+	//for nicer code
+	void fermionicContributionInline_onlyGradient_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq, double &dU_ov_dm, double &dU_ov_ds);
 	
 	
+	//computes gradient and function
 	void computeConstrainedEffectivePotential_FunctionAndGradient(const double magnetization, const double staggeredMagnetization, double &U, double &dU_ov_dm, double &dU_ov_ds);
 	//versions of computing function and gradient
 	void computeFermionicContribution_FunctionAndGradient_qad(const double magnetization, const double staggeredMagnetization, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
+	//faster
+	void computeFermionicContribution_FunctionAndGradient_FromStoredEigenvalues( const double magnetization, const double staggeredMagnetization, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
 	// format gsl likes
 	void computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, void *params, double *U, gsl_vector *gradient_of_U);
-	
+	//for nicer code
+	void fermionicContributionInline_FunctionAndGradient_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
 	
 	
 
@@ -149,7 +159,7 @@ class constrainedEffectivePotential
 	void getActualMinimizerGradient(double &dU_ov_dm, double &dU_ov_ds);
 	
 	
-	#include "constrainedEffectivePotential_inlined.h"
+
 };
 
 //the wrappers have as a parameter a pointer to the instance of the class
