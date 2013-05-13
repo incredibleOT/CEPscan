@@ -13,7 +13,7 @@
 #include <iostream>
 
 #include "gsl/gsl_multimin.h"
-
+#include "gsl/gsl_vector.h"
 
 class constrainedEffectivePotential
 {
@@ -26,27 +26,41 @@ class constrainedEffectivePotential
 	double *sinSquaredOfPmuHalf_L0, *sinSquaredOfPmuHalf_L1, *sinSquaredOfPmuHalf_L2, *sinSquaredOfPmuHalf_L3;
 	double *cosSquaredOfPmuHalf_L0, *cosSquaredOfPmuHalf_L1, *cosSquaredOfPmuHalf_L2, *cosSquaredOfPmuHalf_L3;
 	
+	int numberOfDistingtMomenta;
+	double *absNuP, *absNuVarP, *absGammaP, *absGammaVarP, *factorOfMomentum; 
+	
 	double kappa_N; //==kappa
 	double lambda_N; //==lambda * N_f
 	double yukawa_N; //== Y_N= Y*\sqrt(N_f)
 	
 	int N_f;
 	double rho;
+	double one_ov_twoRho;
 	double r;
 	
 	//parameters for the minimization
-	double tolerance;
-	int minimizationAlgorithm;
+	double toleranceForLineMinimization;
+	double toleranceForConvergence;
+	double initialStepSize;
 	int maxNumerOfIterations;
+	int minimizationAlgorithm; 
+	bool iteratorStoppedFlag;
+	// 1 = gsl_multimin_fdfminimizer_conjugate_fr
+	// 2 = gsl_multimin_fdfminimizer_conjugate_pr
+	// 3 = gsl_multimin_fdfminimizer_vector_bfgs2
+	// 4 = gsl_multimin_fdfminimizer_vector_bfgs
+	// 5 = gsl_multimin_fdfminimizer_steepest_descent
+	
 	
 	//gsl stuff for minimization
 	// a minimizer using the function and it's gradient
 	gsl_multimin_fdfminimizer *minimizer;
 	gsl_multimin_function_fdf functionHandler;
+	const gsl_multimin_fdfminimizer_type *algorithmForMinimization;
 	
 	public:
 	//constructor
-	constrainedEffectivePotential(int L0, int L1, int L2, int L3, bool antiL3=false);
+	constrainedEffectivePotential(const int L0, const int L1, const int L2, const int L3, const bool antiL3=false);
 	//destructor
 	~constrainedEffectivePotential();
 	
@@ -59,50 +73,89 @@ class constrainedEffectivePotential
 	void set_rho(double new_rho);
 	void set_r(double new_r);
 	
-	void set_tolerance(double new_tol);
-	void set_minimizationAlgorithm(int new_alg);
+	void set_toleranceForLineMinimization(double new_tol);
+	void set_toleranceForConvergence(double new_tol);
+	void set_initialStepSize(double new_step);
 	void set_maxNumerOfIterations(int new_NOI);
+	void set_minimizationAlgorithm(int new_alg);
+	
+	
 	
 	
 	//private functions
 // 	private: NOTE make private in the end
 	void fillLatticeMomenta();
+	
+	void fillEigenvalues();
 
 	//computation of eigenvalues
-	std::complex< double > computeAnalyticalEigenvalue(double p0, double p1, double p2, double p3);
+	std::complex< double > computeAnalyticalEigenvalue(const double p0, const double p1, const double p2, const double p3);
 	//computes eigenvalues from the index and uses the arrays to not compute the sins
-	std::complex< double > computeAnalyticalEigenvalue_fromIndex(int l0, int l1, int l2, int l3);
+	std::complex< double > computeAnalyticalEigenvalue_fromIndex(const int l0, const int l1, const int l2, const int l3);
 	//computes at the same time nu(p) and nu(p+(pi,pi,pi,pi)) from the index
-	void computeAnalyticalEigenvalue_fromIndex_pAndVarP(int l0, int l1, int l2, int l3, std::complex< double > &nuOfP, std::complex< double > &nuOfVarP);
+	void computeAnalyticalEigenvalue_fromIndex_pAndVarP(const int l0, const int l1, const int l2, const int l3, std::complex< double > &nuOfP, std::complex< double > &nuOfVarP);
 	
 	
-	double computeConstrainedEffectivePotential_onlyFunction(double magnetization, double staggeredMagnetization);
+	public:
+	double computeConstrainedEffectivePotential_onlyFunction(const double magnetization, const double staggeredMagnetization);
 	//versions of computing the function only
 	//computation of the fermionic contribution
 	//just computes the sum of logs as in philipp's thesis 4.35
-	double computeFermionicContribution_onlyFunction_qad(double magnetization, double staggeredMagnetization);
+	double computeFermionicContribution_onlyFunction_qad(const double magnetization, const double staggeredMagnetization);
+	//specialized for L^3xL_t
+	double computeFermionicContribution_onlyFunction_LcubeTimesLt(const double magnetization, const double staggeredMagnetization);
+	double computeFermionicContribution_onlyFunction_LcubeTimesLt_withInline(const double magnetization, const double staggeredMagnetization);
+	//uses stored values
+	double computeFermionicContribution_onlyFunction_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization);
+	// format gsl likes
+	double computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params);
+	//
+	//
+	double fermionicContributionInline_onlyFunction(int l0, int l1, int l2, int l3, double ySq_mSq, double ySq_sSq, double factor);
+	double fermionicContributionInline_onlyFunction_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq);
+	//wrapper for function to make a pointer below the class
+
 	
-	void computeConstrainedEffectivePotential_onlyGradient( double magnetization, double staggeredMagnetization, double &dU_ov_dm, double &dU_ov_ds);
+	
+	void computeConstrainedEffectivePotential_onlyGradient( const double magnetization, const double staggeredMagnetization, double &dU_ov_dm, double &dU_ov_ds);
 	//versions of computing the gradient only
-	void computeFermionicContribution_onlyGradient_qad( double magnetization, double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds);
+	void computeFermionicContribution_onlyGradient_qad( const double magnetization, const double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds);
+	// format gsl likes
+	void computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, void *params, gsl_vector *gradient_of_U);
+	//inlinefct
 	
-	void computeConstrainedEffectivePotential_FunctionAndGradient(double magnetization, double staggeredMagnetization, double &U, double &dU_ov_dm, double &dU_ov_ds);
+	
+	void computeConstrainedEffectivePotential_FunctionAndGradient(const double magnetization, const double staggeredMagnetization, double &U, double &dU_ov_dm, double &dU_ov_ds);
 	//versions of computing function and gradient
-	void computeFermionicContribution_FunctionAndGradient_qad(double magnetization, double staggeredMagnetization, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
+	void computeFermionicContribution_FunctionAndGradient_qad(const double magnetization, const double staggeredMagnetization, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
+	// format gsl likes
+	void computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, void *params, double *U, gsl_vector *gradient_of_U);
+	
 	
 	
 
-// 	void computeConstrainedEffectivePotential_gradient_qad( double magnetization, double staggeredMagnetization, double &result_magnetization, double &result_staggered );
-
-// 	void computeConstrainedEffectivePotential_and_gradient_qad( double magnetization, double staggeredMagnetization, double &resultCEP, double &result_magnetization, double &result_staggered );
+	public: 
+	
+	int initializeMinimizer(const double magnetization, const double staggeredMagnetization);
+	
+	int iterateMinimizer();
+	
+	bool testMinimizerGradient();//will use toleranceForConvergence
+	bool testMinimizerGradient(const double tol);
+	bool iterationStopped();
+	
+	void getActualMinimizerLocation(double &magnetization, double &staggeredMagnetization);
+	double getActualMinimizerValue();
+	void getActualMinimizerGradient(double &dU_ov_dm, double &dU_ov_ds);
 	
 	
-	
-	
+	#include "constrainedEffectivePotential_inlined.h"
 };
 
-
-
+//the wrappers have as a parameter a pointer to the instance of the class
+double wrapper_computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params);
+void wrapper_computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, void *params, gsl_vector *gradient_of_U);
+void wrapper_computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, void *params, double *U, gsl_vector *gradient_of_U);
 
 #endif
 

@@ -1,7 +1,7 @@
 #include "constrainedEffectivePotential.h"
 
 
-void constrainedEffectivePotential::computeConstrainedEffectivePotential_FunctionAndGradient(double magnetization, double staggeredMagnetization, double &U, double &dU_ov_dm, double &dU_ov_ds)
+void constrainedEffectivePotential::computeConstrainedEffectivePotential_FunctionAndGradient(double const magnetization, const double staggeredMagnetization, double &U, double &dU_ov_dm, double &dU_ov_ds)
 {
 	//U= -8*kappa*(m^2-s^2) + m^2 + s^2 + lambda*( m^4 + s^4 + 6*m^2s^2 - 2*(m^2+s^2)) + U_f(m,s)
 	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m)
@@ -25,7 +25,7 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_Functio
 }
 
 
-void constrainedEffectivePotential::computeFermionicContribution_FunctionAndGradient_qad(double magnetization, double staggeredMagnetization, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds)
+void constrainedEffectivePotential::computeFermionicContribution_FunctionAndGradient_qad(const double magnetization, const double staggeredMagnetization, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds)
 {
 	//U_f = -2/V*sum log[ a^2 + y^2*m^2*b^2 ] = -2/v*sum log[A]
 	//a = a(m,s) = |nu(p)|*|nu(varP)| + y^2*(m^2-s^2)*|gamma(p)|*|gamma(varP)|
@@ -43,7 +43,7 @@ void constrainedEffectivePotential::computeFermionicContribution_FunctionAndGrad
 	Uf=0.0; dUf_ov_dm=0.0; dUf_ov_ds=0.0; 
 	if(yukawa_N==0.0){ return; }
 	
-	double one_ov_twoRho=0.5/rho;
+// 	double one_ov_twoRho=0.5/rho;
 	
 	double ySquared(yukawa_N*yukawa_N);
 	double ySq_times_mSq_mi_sSq( ySquared*(magnetization*magnetization - staggeredMagnetization*staggeredMagnetization) );
@@ -70,8 +70,14 @@ void constrainedEffectivePotential::computeFermionicContribution_FunctionAndGrad
 					abs_gammaOfVarP=std::abs( 1.0 - one_ov_twoRho*nuOfVarP );
 					
 					a = abs_nuOfP*abs_nuOfVarP + ySq_times_mSq_mi_sSq*abs_gammaOfP*abs_gammaOfVarP;
-					b = abs_gammaOfP*abs_nuOfVarP + abs_nuOfP*abs_gammaOfVarP;
+					b = abs_gammaOfP*abs_nuOfVarP - abs_nuOfP*abs_gammaOfVarP;
 					A=(a*a + ySq_times_mSq*b*b);
+					if(A==0.0)
+					{
+						std::cerr <<"Error, argument of log is zero for:" <<std::endl;
+						std::cerr <<"l0=" <<l0 <<"  l1=" <<l1 <<"  l2=" <<l2 <<"  l3=" <<l3 <<std::endl;
+						std::cerr <<"nu(p)=" <<nuOfP <<"  nu(varP)=" <<nuOfVarP <<"  gamma(p)=" <<( 1.0 - one_ov_twoRho*nuOfP ) <<"  gamma(varP)=" <<( 1.0 - one_ov_twoRho*nuOfVarP ) <<std::endl;
+					}
 					one_ov_A=1.0/A;
 					Uf+=log(A);
 					dUf_ov_dm+=(2.0*abs_gammaOfP*abs_gammaOfVarP*a + b*b)*one_ov_A;
@@ -89,4 +95,23 @@ void constrainedEffectivePotential::computeFermionicContribution_FunctionAndGrad
 	dUf_ov_ds/=static_cast< double >(L0); dUf_ov_ds/=static_cast< double >(L1); dUf_ov_ds/=static_cast< double >(L2); dUf_ov_ds/=static_cast< double >(L3);
 	
 }
+
+void constrainedEffectivePotential::computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, void *params, double *U, gsl_vector *gradient_of_U)
+{
+	double magnetization=gsl_vector_get(mags,0);
+	double staggeredMagnetization=gsl_vector_get(mags,1);
+	
+	double dU_dm(0.0), dU_ds(0.0);
+	
+	computeConstrainedEffectivePotential_FunctionAndGradient(magnetization, staggeredMagnetization, *U, dU_dm, dU_ds);
+	gsl_vector_set(gradient_of_U, 0, dU_dm);
+	gsl_vector_set(gradient_of_U, 1, dU_ds);
+}
+
+void wrapper_computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, void *params, double *U, gsl_vector *gradient_of_U)
+{
+	constrainedEffectivePotential *CEP = (constrainedEffectivePotential *)params;
+	CEP->computeConstrainedEffectivePotential_FunctionAndGradient_gsl(mags, NULL, U, gradient_of_U);
+}
+
 
