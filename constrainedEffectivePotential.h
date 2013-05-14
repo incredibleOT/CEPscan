@@ -44,6 +44,7 @@ class constrainedEffectivePotential
 	double initialStepSize;
 	int maxNumerOfIterations;
 	int minimizationAlgorithm; 
+	bool minimizerInitialized;
 	bool iteratorStoppedFlag;
 	// 1 = gsl_multimin_fdfminimizer_conjugate_fr
 	// 2 = gsl_multimin_fdfminimizer_conjugate_pr
@@ -79,7 +80,19 @@ class constrainedEffectivePotential
 	void set_maxNumerOfIterations(int new_NOI);
 	void set_minimizationAlgorithm(int new_alg);
 	
+	double get_kappa_N();
+	double get_lambda_N();
+	double get_yukawa_N();
 	
+	int get_N_f();
+	double get_rho();
+	double get_r();
+	
+	double  get_toleranceForLineMinimization();
+	double  get_toleranceForConvergence();
+	double  get_initialStepSize();
+	int  get_maxNumerOfIterations();
+	int  get_minimizationAlgorithm();
 	
 	
 	//private functions
@@ -112,7 +125,7 @@ class constrainedEffectivePotential
 	//uses stored values NOTE, this will be used in the end
 	double computeFermionicContribution_onlyFunction_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization);
 	// format gsl likes
-	double computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params);
+	double computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags);
 	//for nicer code
 	
 	double fermionicContributionInline_onlyFunction_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq);
@@ -126,7 +139,7 @@ class constrainedEffectivePotential
 	//faster
 	void computeFermionicContribution_onlyGradient_FromStoredEigenvalues( const double magnetization, const double staggeredMagnetization, double &dUf_ov_dm, double &dUf_ov_ds);
 	// format gsl likes
-	void computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, void *params, gsl_vector *gradient_of_U);
+	void computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, gsl_vector *gradient_of_U);
 	//for nicer code
 	void fermionicContributionInline_onlyGradient_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq, double &dU_ov_dm, double &dU_ov_ds);
 	
@@ -138,7 +151,7 @@ class constrainedEffectivePotential
 	//faster
 	void computeFermionicContribution_FunctionAndGradient_FromStoredEigenvalues( const double magnetization, const double staggeredMagnetization, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
 	// format gsl likes
-	void computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, void *params, double *U, gsl_vector *gradient_of_U);
+	void computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, double *U, gsl_vector *gradient_of_U);
 	//for nicer code
 	void fermionicContributionInline_FunctionAndGradient_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
 	
@@ -148,11 +161,22 @@ class constrainedEffectivePotential
 	
 	int initializeMinimizer(const double magnetization, const double staggeredMagnetization);
 	
+	//will basically do the same as initiallizeMinimizer. Only works if it is already initiallized
+	//will be called, if one of the parameters is reset
+	int reInitializeMinimizer();//takes current status
+	int reInitializeMinimizer(const double magnetization, const double staggeredMagnetization);
+	
+	
 	int iterateMinimizer();
+	int itarateUntilToleranceReached(); //max number of iteration given by maxNumerOfIterations
+	int itarateUntilToleranceReached(const double tol); //max number of iteration given by maxNumerOfIterations
+	int iterateUntilIterationStopps(); //max number of iteration given by maxNumerOfIterations
 	
 	bool testMinimizerGradient();//will use toleranceForConvergence
 	bool testMinimizerGradient(const double tol);
 	bool iterationStopped();
+	
+	
 	
 	void getActualMinimizerLocation(double &magnetization, double &staggeredMagnetization);
 	double getActualMinimizerValue();

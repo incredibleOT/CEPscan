@@ -12,7 +12,7 @@ cosSquaredOfPmuHalf_L0(NULL),cosSquaredOfPmuHalf_L1(NULL),cosSquaredOfPmuHalf_L2
 absNuP(NULL), absNuVarP(NULL), absGammaP(NULL), absGammaVarP(NULL),factorOfMomentum(NULL),
 kappa_N(-1.0), lambda_N(-1.0), yukawa_N(-1.0),
 N_f(1), rho(1.0), one_ov_twoRho(0.5/rho), r(0.5),
-toleranceForLineMinimization(-1.0), toleranceForConvergence(-1.0), initialStepSize(-1.0), maxNumerOfIterations(-1), minimizationAlgorithm(-1), iteratorStoppedFlag(false),
+toleranceForLineMinimization(-1.0), toleranceForConvergence(-1.0), initialStepSize(-1.0), maxNumerOfIterations(100), minimizationAlgorithm(-1), minimizerInitialized(false), iteratorStoppedFlag(false),
 minimizer(NULL)
 {
 	if( L0%2!=0 || L1%2!=0 || L2%2!=0 || L3%2!=0 )
@@ -708,9 +708,9 @@ void constrainedEffectivePotential::fillEigenvalues()
 	}
 }
 
-void constrainedEffectivePotential::set_kappa_N(double new_k){ kappa_N=new_k; }
-void constrainedEffectivePotential::set_lambda_N(double new_l){ lambda_N=new_l; }
-void constrainedEffectivePotential::set_yukawa_N(double new_y){ yukawa_N=new_y; }
+void constrainedEffectivePotential::set_kappa_N(double new_k){ kappa_N=new_k; reInitializeMinimizer();}
+void constrainedEffectivePotential::set_lambda_N(double new_l){ lambda_N=new_l; reInitializeMinimizer();}
+void constrainedEffectivePotential::set_yukawa_N(double new_y){ yukawa_N=new_y; reInitializeMinimizer();}
 
 void constrainedEffectivePotential::set_N_f(int new_N){ N_f=new_N; }
 void constrainedEffectivePotential::set_rho(double new_rho){ rho=new_rho; one_ov_twoRho=0.5/rho; }
@@ -757,6 +757,22 @@ void constrainedEffectivePotential::set_minimizationAlgorithm(int new_alg)
 			exit(EXIT_FAILURE);
 	}
 }
+
+
+double constrainedEffectivePotential::get_kappa_N(){ return kappa_N; }
+double constrainedEffectivePotential::get_lambda_N(){ return lambda_N; }
+double constrainedEffectivePotential::get_yukawa_N(){ return yukawa_N; }
+
+int constrainedEffectivePotential::get_N_f(){ return N_f; }
+double constrainedEffectivePotential::get_rho(){ return rho; }
+double constrainedEffectivePotential::get_r(){ return r; }
+
+double  constrainedEffectivePotential::get_toleranceForLineMinimization(){ return toleranceForLineMinimization; }
+double  constrainedEffectivePotential::get_toleranceForConvergence(){ return toleranceForConvergence; }
+double  constrainedEffectivePotential::get_initialStepSize(){ return initialStepSize; }
+int  constrainedEffectivePotential::get_maxNumerOfIterations(){ return maxNumerOfIterations; }
+int  constrainedEffectivePotential::get_minimizationAlgorithm(){ return minimizationAlgorithm; }
+
 
 
 std::complex< double > constrainedEffectivePotential::computeAnalyticalEigenvalue(const double p0, const double p1, const double p2, const double p3)
@@ -854,6 +870,7 @@ int constrainedEffectivePotential::initializeMinimizer(const double magnetizatio
 		std::cerr <<"5 = gsl_multimin_fdfminimizer_steepest_descent" <<std::endl;
 		exit(EXIT_FAILURE);
 	}
+	if(minimizerInitialized){ return reInitializeMinimizer(magnetization, staggeredMagnetization); }
 	
 	gsl_vector *mags = gsl_vector_alloc(2);
 	gsl_vector_set(mags, 0, magnetization);
@@ -868,9 +885,39 @@ int constrainedEffectivePotential::initializeMinimizer(const double magnetizatio
 	functionHandler.params=(void *) this;
 	
 	int ret = gsl_multimin_fdfminimizer_set(minimizer, &functionHandler, mags, initialStepSize, toleranceForLineMinimization);
+	
 	gsl_vector_free(mags);
+	minimizerInitialized=true;
 	return ret;
 }
+
+
+
+int constrainedEffectivePotential::reInitializeMinimizer(const double magnetization, const double staggeredMagnetization)
+{
+	if(!minimizerInitialized){ return 1; }
+	gsl_multimin_fdfminimizer_free( minimizer );
+	minimizer = gsl_multimin_fdfminimizer_alloc (algorithmForMinimization, 2);
+	gsl_vector *mags = gsl_vector_alloc(2);
+	gsl_vector_set(mags, 0, magnetization);
+	gsl_vector_set(mags, 1, staggeredMagnetization);
+	int ret = gsl_multimin_fdfminimizer_set(minimizer, &functionHandler, mags, initialStepSize, toleranceForLineMinimization);
+	gsl_vector_free(mags);
+	iteratorStoppedFlag=false;
+	return ret;
+}
+
+
+
+int constrainedEffectivePotential::reInitializeMinimizer()
+{
+	if(!minimizerInitialized){ return 1; }
+	double mag(0.0),stag(0.0);
+	getActualMinimizerLocation(mag,stag);
+	return reInitializeMinimizer(mag, stag);
+}
+
+
 
 
 int constrainedEffectivePotential::iterateMinimizer()
@@ -880,6 +927,47 @@ int constrainedEffectivePotential::iterateMinimizer()
 	if(returnValue==GSL_ENOPROG){iteratorStoppedFlag=true;}
 	return returnValue;
 }
+
+int constrainedEffectivePotential::itarateUntilToleranceReached()
+{
+	return itarateUntilToleranceReached(toleranceForConvergence);
+}
+
+int constrainedEffectivePotential::itarateUntilToleranceReached(const double tol)
+{
+	if(!minimizerInitialized)
+	{
+		std::cerr <<"Error, minimizer not initiallized in constrainedEffectivePotential::itarateUntilToleranceReached(const double tol)" <<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	
+	for(int i=1; i<=maxNumerOfIterations; ++i)
+	{
+		iterateMinimizer();
+		if(testMinimizerGradient(tol)){ return i; }
+		if( iterationStopped() ){ return i; }
+	}
+	return 0;
+}
+
+
+int constrainedEffectivePotential::iterateUntilIterationStopps()
+{
+	if(!minimizerInitialized)
+	{
+		std::cerr <<"Error, minimizer not initiallized in constrainedEffectivePotential::iterateUntilIterationStopps()" <<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	
+	for(int i=1; i<=maxNumerOfIterations; ++i)
+	{
+		iterateMinimizer();
+		if( iterationStopped() ){ return i; }
+	}
+	return 0;
+}
+
+
 
 bool constrainedEffectivePotential::testMinimizerGradient()//will use toleranceForConvergence
 {

@@ -7,7 +7,7 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_Functio
 	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m)
 	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s)
 	U=0.0; dU_ov_dm=0.0; dU_ov_ds=0.0;
-	computeFermionicContribution_FunctionAndGradient_qad(magnetization, staggeredMagnetization, U, dU_ov_dm, dU_ov_ds);
+	computeFermionicContribution_FunctionAndGradient_FromStoredEigenvalues(magnetization, staggeredMagnetization, U, dU_ov_dm, dU_ov_ds);
 	double mSq=magnetization*magnetization;
 	double sSq=staggeredMagnetization*staggeredMagnetization;
 	
@@ -150,7 +150,7 @@ void constrainedEffectivePotential::computeFermionicContribution_FunctionAndGrad
 }
 
 
-void constrainedEffectivePotential::computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, void *params, double *U, gsl_vector *gradient_of_U)
+void constrainedEffectivePotential::computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, double *U, gsl_vector *gradient_of_U)
 {
 	double magnetization=gsl_vector_get(mags,0);
 	double staggeredMagnetization=gsl_vector_get(mags,1);
@@ -165,7 +165,7 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_Functio
 void wrapper_computeConstrainedEffectivePotential_FunctionAndGradient_gsl(const gsl_vector *mags, void *params, double *U, gsl_vector *gradient_of_U)
 {
 	constrainedEffectivePotential *CEP = (constrainedEffectivePotential *)params;
-	CEP->computeConstrainedEffectivePotential_FunctionAndGradient_gsl(mags, NULL, U, gradient_of_U);
+	CEP->computeConstrainedEffectivePotential_FunctionAndGradient_gsl(mags, U, gradient_of_U);
 }
 
 

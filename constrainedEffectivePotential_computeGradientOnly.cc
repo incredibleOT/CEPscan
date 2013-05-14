@@ -6,7 +6,7 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyGra
 	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m)
 	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s)
 	dU_ov_dm=0.0; dU_ov_ds=0.0;
-	computeFermionicContribution_onlyGradient_qad(magnetization, staggeredMagnetization, dU_ov_dm, dU_ov_ds);
+	computeFermionicContribution_onlyGradient_FromStoredEigenvalues(magnetization, staggeredMagnetization, dU_ov_dm, dU_ov_ds);
 	//std::cout <<"ferm. contr to grad: dU_f/dm=" <<dU_ov_dm <<"   dU_f/ds=" <<dU_ov_ds <<std::endl;
 	dU_ov_dm += -16.0*kappa_N*magnetization + 2.0*magnetization;
 	dU_ov_dm += lambda_N*( 4.0*magnetization*magnetization*magnetization + 12.0*magnetization*staggeredMagnetization*staggeredMagnetization - 4.0*magnetization);
@@ -140,7 +140,7 @@ void constrainedEffectivePotential::computeFermionicContribution_onlyGradient_Fr
 
 
 
-void constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, void *params, gsl_vector *gradient_of_U)
+void constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, gsl_vector *gradient_of_U)
 {
 	double magnetization=gsl_vector_get(mags,0);
 	double staggeredMagnetization=gsl_vector_get(mags,1);
@@ -157,7 +157,7 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyGra
 void wrapper_computeConstrainedEffectivePotential_onlyGradient_gsl(const gsl_vector *mags, void *params, gsl_vector *gradient_of_U)
 {
 	constrainedEffectivePotential *CEP = (constrainedEffectivePotential *)params;
-	CEP->computeConstrainedEffectivePotential_onlyGradient_gsl(mags, NULL, gradient_of_U);
+	CEP->computeConstrainedEffectivePotential_onlyGradient_gsl(mags, gradient_of_U);
 }
 
 

@@ -9,8 +9,7 @@ double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyF
 	double mSq=magnetization*magnetization;
 	double sSq=staggeredMagnetization*staggeredMagnetization;
 	
-	//NOTE optimize here
-	double fermionicContribution_sumOfLogs=computeFermionicContribution_onlyFunction_qad(magnetization,staggeredMagnetization);
+	double fermionicContribution_sumOfLogs=computeFermionicContribution_onlyFunction_FromStoredEigenvalues(magnetization,staggeredMagnetization);
 	result+=fermionicContribution_sumOfLogs;
 	result+= mSq + sSq - 8.0 * kappa_N * (mSq - sSq);
 	result+= lambda_N * ( mSq*mSq + sSq*sSq + 6.0*mSq*sSq -2.0*(mSq + sSq) );
@@ -134,7 +133,7 @@ double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_
 }
 
 
-double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params)
+double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags)
 {
 	double magnetization=gsl_vector_get(mags,0);
 	double staggeredMagnetization=gsl_vector_get(mags,1);
@@ -145,7 +144,7 @@ double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyF
 double wrapper_computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params)
 {
 	constrainedEffectivePotential *CEP = (constrainedEffectivePotential *)params;
-	return CEP->computeConstrainedEffectivePotential_onlyFunction_gsl(mags, NULL);
+	return CEP->computeConstrainedEffectivePotential_onlyFunction_gsl(mags);
 }
 
 
