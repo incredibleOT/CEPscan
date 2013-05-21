@@ -66,7 +66,7 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 		sinP=sin(p); sinSquaredOfPmu_L0[i]=sinP*sinP;
 		sinP=sin(0.5*p); sinSquaredOfPmuHalf_L0[i]=sinP*sinP;
 		cosP=cos(0.5*p); cosSquaredOfPmuHalf_L0[i]=cosP*cosP;
-		std::cout <<"l0 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L0[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L0[i] <<std::endl;
+// 		std::cout <<"l0 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L0[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L0[i] <<std::endl;
 	}
 	for(int i=0; i<L1; ++i)
 	{
@@ -74,7 +74,7 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 		sinP=sin(p); sinSquaredOfPmu_L1[i]=sinP*sinP;
 		sinP=sin(0.5*p); sinSquaredOfPmuHalf_L1[i]=sinP*sinP;
 		cosP=cos(0.5*p); cosSquaredOfPmuHalf_L1[i]=cosP*cosP;
-		std::cout <<"l1 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L1[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L1[i] <<std::endl;
+// 		std::cout <<"l1 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L1[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L1[i] <<std::endl;
 	}
 	for(int i=0; i<L2; ++i)
 	{
@@ -82,7 +82,7 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 		sinP=sin(p); sinSquaredOfPmu_L2[i]=sinP*sinP;
 		sinP=sin(0.5*p); sinSquaredOfPmuHalf_L2[i]=sinP*sinP;
 		cosP=cos(0.5*p); cosSquaredOfPmuHalf_L2[i]=cosP*cosP;
-		std::cout <<"l2 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L2[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L2[i] <<std::endl;
+// 		std::cout <<"l2 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L2[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L2[i] <<std::endl;
 	}
 	for(int i=0; i<L3; ++i)
 	{
@@ -90,7 +90,7 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 		sinP=sin(p); sinSquaredOfPmu_L3[i]=sinP*sinP;
 		sinP=sin(0.5*p); sinSquaredOfPmuHalf_L3[i]=sinP*sinP;
 		cosP=cos(0.5*p); cosSquaredOfPmuHalf_L3[i]=cosP*cosP;
-		std::cout <<"l3 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L3[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L3[i] <<std::endl;
+// 		std::cout <<"l3 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L3[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L3[i] <<std::endl;
 	}
 }
 
@@ -176,6 +176,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					for(int l2=l1+1; l2<Lhalf; ++l2)
 					{
 						//p,q,r 48
+						l2=l2; //no compiler warning
 						++counter;
 					}
 					{
@@ -218,6 +219,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					l1=0;
 					{
 						int l2=0;
+						l2=l2; //no compiler warning
 						//0,0,p  6
 						++counter;
 					}
@@ -238,6 +240,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					l1=0;
 					{
 						int l2=0;
+						l2=l2; //no compiler warning
 						//0,0,L/2, 3
 						++counter;
 					}
@@ -245,8 +248,10 @@ void constrainedEffectivePotential::fillEigenvalues()
 				l0=0;
 				{
 					int l1=0;
+					l1=l1; //no compiler warning
 					{
 						int l2=0;
+						l2=l2; //no compiler warning
 						//0,0,0, 1
 						++counter;
 					}
@@ -305,6 +310,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					l1=0;
 					{
 						int l2=0;
+						l2=l2; //no compiler warning
 						//0,0,p  6
 						++counter;
 					}
@@ -325,6 +331,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					l1=0;
 					{
 						int l2=0;
+						l2=l2; //no compiler warning
 						//0,0,L/2, 3
 						++counter;
 					}
@@ -332,8 +339,10 @@ void constrainedEffectivePotential::fillEigenvalues()
 				l0=0;
 				{
 					int l1=0;
+					l1=l1; //no compiler warning
 					{
 						int l2=0;
+						l2=l2;//no compiler warning
 						//0,0,0, 1
 						++counter;
 					}
@@ -711,10 +720,14 @@ void constrainedEffectivePotential::fillEigenvalues()
 void constrainedEffectivePotential::set_kappa_N(double new_k){ kappa_N=new_k; reInitializeMinimizer();}
 void constrainedEffectivePotential::set_lambda_N(double new_l){ lambda_N=new_l; reInitializeMinimizer();}
 void constrainedEffectivePotential::set_yukawa_N(double new_y){ yukawa_N=new_y; reInitializeMinimizer();}
+void constrainedEffectivePotential::set_kappa_lambda_yukawa_N(double new_k, double new_l, double new_y)
+{
+	kappa_N=new_k; lambda_N=new_l; yukawa_N=new_y; reInitializeMinimizer();
+}
 
 void constrainedEffectivePotential::set_N_f(int new_N){ N_f=new_N; }
-void constrainedEffectivePotential::set_rho(double new_rho){ rho=new_rho; one_ov_twoRho=0.5/rho; }
-void constrainedEffectivePotential::set_r(double new_r){ r=new_r; }
+void constrainedEffectivePotential::set_rho(double new_rho){ rho=new_rho; one_ov_twoRho=0.5/rho; fillEigenvalues(); reInitializeMinimizer(); }
+void constrainedEffectivePotential::set_r(double new_r){ r=new_r; fillEigenvalues(); reInitializeMinimizer(); }
 
 void constrainedEffectivePotential::set_toleranceForLineMinimization(double new_tol){ toleranceForLineMinimization=new_tol; }
 void constrainedEffectivePotential::set_toleranceForConvergence(double new_tol){ toleranceForConvergence=new_tol; }

@@ -7,7 +7,7 @@ CXXFLAGS= -Wall -Wextra -Wno-long-long -pedantic
 
 # INCL=""
 
-OFILES = constrainedEffectivePotential.o
+OFILES = constrainedEffectivePotential.o CEPscan_helper.o
 
 
 CEPFiles= constrainedEffectivePotential_computeFunctionOnly.cc constrainedEffectivePotential_computeGradientOnly.cc constrainedEffectivePotential_computeFunctionAndGradient.cc
@@ -18,6 +18,12 @@ LIBSLOC=-L/opt/products/gsl/1.15/lib64
 
 LIBS= -lgsl -lgslcblas -lm -static
 # ##########################################
+
+CEPscan: CEPscan.o ${OFILES}
+	${CXX} ${CXXFLAGS} ${INCL} ${LIBSLOC}  -o $@ $^ ${LIBS}
+
+CEPscan.o: CEPscan.cc ${OFILES}
+	${CXX} ${CXXFLAGS} ${INCL} -c -o $@ $<
 
 testCEPscan: testCEPscan.o ${OFILES}
 	${CXX} ${CXXFLAGS} ${INCL} ${LIBSLOC}  -o $@ $^ ${LIBS}
@@ -36,6 +42,12 @@ timingTestCEP.o: timingTestCEP.cc ${OFILES}
 constrainedEffectivePotential.o: constrainedEffectivePotential.cc constrainedEffectivePotential.h ${CEPFiles}
 	${CXX} ${CXXFLAGS} ${INCL} -c -o $@ $< 
 
+CEPscan_helper.o: CEPscan_helper.cc CEPscan_helper.h
+	${CXX} ${CXXFLAGS} ${INCL} -c -o $@ $< 
+
 clean:
-	rm testCEPscan timingTestCEP *.o 
+	rm *.o *~
+
+clean_exec:
+	rm testCEPscan timingTestCEP
 

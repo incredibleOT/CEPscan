@@ -69,6 +69,7 @@ class constrainedEffectivePotential
 	void set_kappa_N(double new_k);
 	void set_lambda_N(double new_l);
 	void set_yukawa_N(double new_y);
+	void set_kappa_lambda_yukawa_N(double new_k, double new_l, double new_y);
 	
 	void set_N_f(int N);
 	void set_rho(double new_rho);
@@ -96,9 +97,8 @@ class constrainedEffectivePotential
 	
 	
 	//private functions
-// 	private: NOTE make private in the end
+	private: 
 	void fillLatticeMomenta();
-	
 	void fillEigenvalues();
 
 	//computation of eigenvalues

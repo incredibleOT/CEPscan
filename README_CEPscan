@@ -1,0 +1,55 @@
+The program CEPscan minimizes the constrained effective potential (CEP)
+wrt the magnetization and the staggered magnetization (according to fomrula 4.35 in philipp's thesis).
+
+It works with an input file (variable value pairs)
+
+The program can scan in kappa_N, lambda_N and y_n
+
+The following things can be specified:
+
+ - L_s,L_t (obligatory)
+ - antiperiodic_L_t (whether or not antiperiodic bc in time obligatory)
+ 
+ for kappa_n, lambda_n and yukawa_n (xxx) there are:
+ 
+ - scan_xxx (0 no, positive yes - if missing, no scanning)
+ - xxx  (if scan_xxx==0 , determines the value for xxx obligatory, ignored elsewise)
+ - xxx_min  (starting point if scan_xxx==1, ignored if scan_xxx==0)
+ - xxx_max  (guess!)
+ - xxx_step (stepsize in xxx when scanning xxx)
+
+ - interpret_yukawa_as_continuum (if set, the yukawa coupling will be multiplied by sqrt(2 kappa))  
+ - interpret_lambda_as_continuum (if set, lambda_N will be multiplied by (4 kappa^2) )
+
+ - N_f   default=1 (I think, it doesn't enter enywhere)
+ - rho   default=1.0
+ - r     default = 0.5
+ 
+ - iteration_stopping_criteria (when to stop the iteration - 1 when tolerance_for_convergence is reached
+                                                   2 when iteration stopped, since it cannot improve)
+ - toleranceForLineMinimization (obligatory, determines influences iteration_stopping_criteria==2)
+ - toleranceForConvergence (obligatory if iteration_stopping_criteria==1)
+ - maxNumerOfIterations (default 100);
+ - minimizationAlgorithm (obligatory: 1 = gsl_multimin_fdfminimizer_conjugate_fr
+                                      2 = gsl_multimin_fdfminimizer_conjugate_pr
+                                      3 = gsl_multimin_fdfminimizer_vector_bfgs2
+                                      4 = gsl_multimin_fdfminimizer_vector_bfgs
+                                      5 = gsl_multimin_fdfminimizer_steepest_descent)
+ - starting_procedure (obligatory - 1 use given starting point
+                                    2 use given starting point first and during scan last result
+                                    3 perform a scan in {m_0:m_1:m_s , s_0} and {m_0, s_0:s_1:s_s}, determin the lowest point and start from there - initial stepsize will be the minimum of (s_0/2,m_0/2)
+                                    4 perform a 2-d scan in {m_0:m_1:m_s ,s_0:s_1:s_s}, determin the lowest point and start from there - initial stepsize will be the minimum of (s_0/2,m_0/2))
+ - initialStepSize (obligatory for starting_procedure==1&2, ignored elsewise)
+ - start_m   (start for starting_procedure==1&2)
+ - minimal_m (m_0 from starting_procedure==3&4)
+ - maximal_m (m_1 from starting_procedure==3&4)
+ - step_m    (m_s from starting_procedure==3&4)
+ 
+ - start_s (start for starting_procedure==1&2)
+ - minimal_s (s_0 from starting_procedure==3&4)
+ - maximal_s (s_1 from starting_procedure==3&4)
+ - step_s    (s_s from starting_procedure==3&4)
+ 
+ - outputfile (outputfile, if not given, output is cout)
+ 
+	
