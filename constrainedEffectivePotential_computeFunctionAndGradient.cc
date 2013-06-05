@@ -6,20 +6,29 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_Functio
 	//U= -8*kappa*(m^2-s^2) + m^2 + s^2 + lambda*( m^4 + s^4 + 6*m^2s^2 - 2*(m^2+s^2)) + U_f(m,s)
 	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m)
 	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s)
+	//NOTE added a term coming from the boson loop:
+	//U+=16*(m^2+s^2)*lambda_N*N_f^{-1}*P_B
+	//P_B= 1/V * sum_{p} 1/(2-4*lambda_N-4*kappa*sum{cos(P_mu)}) excluding zero and staggered mode
+	//With that:
+	//dU/dm +=32*m*lambda_N*N_f^{-1}*P_B
+	//dU/ds +=32*s*lambda_N*N_f^{-1}*P_B 
 	U=0.0; dU_ov_dm=0.0; dU_ov_ds=0.0;
 	computeFermionicContribution_FunctionAndGradient_FromStoredEigenvalues(magnetization, staggeredMagnetization, U, dU_ov_dm, dU_ov_ds);
 	double mSq=magnetization*magnetization;
 	double sSq=staggeredMagnetization*staggeredMagnetization;
+	if(useBosonicLoop && !bosonicLoopSet){ bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();}
 	
-	//NOTE optimize here
 	U+= mSq + sSq - 8.0 * kappa_N * (mSq - sSq);
 	U+= lambda_N * ( mSq*mSq + sSq*sSq + 6.0*mSq*sSq -2.0*(mSq + sSq) );
+	if(useBosonicLoop){ U+= 16.0*lambda_N*( mSq + sSq )*bosonicLoop/static_cast< double >(N_f); }
 	
 	dU_ov_dm += -16.0*kappa_N*magnetization + 2.0*magnetization;
 	dU_ov_dm += lambda_N*( 4.0*magnetization*magnetization*magnetization + 12.0*magnetization*staggeredMagnetization*staggeredMagnetization - 4.0*magnetization);
+	if(useBosonicLoop){ dU_ov_dm += 32.0*lambda_N*magnetization*bosonicLoop/static_cast< double >(N_f); }
 	
 	dU_ov_ds += +16.0*kappa_N*staggeredMagnetization + 2.0*staggeredMagnetization;
 	dU_ov_ds += lambda_N*( 4.0*staggeredMagnetization*staggeredMagnetization*staggeredMagnetization + 12.0*magnetization*magnetization*staggeredMagnetization - 4.0*staggeredMagnetization);
+	if(useBosonicLoop){ dU_ov_ds += 32.0*lambda_N*staggeredMagnetization*bosonicLoop/static_cast< double >(N_f); }
 }
 
 

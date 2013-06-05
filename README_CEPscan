@@ -21,7 +21,9 @@ The following things can be specified:
  - interpret_yukawa_as_continuum (if set, the yukawa coupling will be multiplied by sqrt(2 kappa))  
  - interpret_lambda_as_continuum (if set, lambda_N will be multiplied by (4 kappa^2) )
 
- - N_f   default=1 (I think, it doesn't enter enywhere)
+ - include_bosonic_loop       (whether or not the first order in lambda should be included, obligatory)
+
+ - N_f   default=1 
  - rho   default=1.0
  - r     default = 0.5
  
@@ -50,6 +52,7 @@ The following things can be specified:
  - maximal_s (s_1 from starting_procedure==3&4)
  - step_s    (s_s from starting_procedure==3&4)
  
- - outputfile (outputfile, if not given, output is cout)
+ 
+ - outputfile (outputfile, if not given, output is cout)(one may use: [Ls]->Lxx [Lt]->Txx [k]->k_xxxx [l]->l_xxxx [y]->y_xxxx for the scanables: e.g. k_xx_yy with max and min)
  
 	

@@ -5,14 +5,19 @@ double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyF
 {
 	//eq 4.35 philipp's thesis
 	//U= -8*kappa*(m^2-s^2) + m^2 + s^2 + lambda*( m^4 + s^4 + 6*m^2s^2 - 2*(m^2+s^2)) + U_f(m,s)
+	//NOTE added a term coming from the boson loop:
+	//U+=16*(m^2+s^2)*lambda_N*N_f^{-1}*P_B
+	//P_B= 1/V * sum_{p} 1/(2-4*lambda_N-4*kappa*sum{cos(P_mu)}) excluding zero and staggered mode
 	double result(0.0);
 	double mSq=magnetization*magnetization;
 	double sSq=staggeredMagnetization*staggeredMagnetization;
+	if(useBosonicLoop && !bosonicLoopSet){ bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();}
 	
 	double fermionicContribution_sumOfLogs=computeFermionicContribution_onlyFunction_FromStoredEigenvalues(magnetization,staggeredMagnetization);
 	result+=fermionicContribution_sumOfLogs;
 	result+= mSq + sSq - 8.0 * kappa_N * (mSq - sSq);
 	result+= lambda_N * ( mSq*mSq + sSq*sSq + 6.0*mSq*sSq -2.0*(mSq + sSq) );
+	if(useBosonicLoop){ result+= 16.0*lambda_N*( mSq + sSq )*bosonicLoop/static_cast< double >(N_f); }
 	
 	return result;
 }

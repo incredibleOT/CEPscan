@@ -3,15 +3,20 @@
 #include "constrainedEffectivePotential_computeFunctionOnly.cc"
 #include "constrainedEffectivePotential_computeGradientOnly.cc"
 #include "constrainedEffectivePotential_computeFunctionAndGradient.cc"
+#include "constrainedEffectivePotential_computeBosonicLoop.cc"
+#include "constrainedEffectivePotential_computeSecondDerivative.cc"
 
 constrainedEffectivePotential::constrainedEffectivePotential(const int l0, const int l1, const int l2, const int l3, const bool antiL3):
 L0(l0), L1(l1), L2(l2), L3(l3), antiperiodicBC_L3(antiL3),
 sinSquaredOfPmu_L0(NULL),sinSquaredOfPmu_L1(NULL),sinSquaredOfPmu_L2(NULL),sinSquaredOfPmu_L3(NULL),
 sinSquaredOfPmuHalf_L0(NULL),sinSquaredOfPmuHalf_L1(NULL),sinSquaredOfPmuHalf_L2(NULL),sinSquaredOfPmuHalf_L3(NULL),
 cosSquaredOfPmuHalf_L0(NULL),cosSquaredOfPmuHalf_L1(NULL),cosSquaredOfPmuHalf_L2(NULL),cosSquaredOfPmuHalf_L3(NULL),
-absNuP(NULL), absNuVarP(NULL), absGammaP(NULL), absGammaVarP(NULL),factorOfMomentum(NULL),
+cosOfPmu_L0(NULL), cosOfPmu_L1(NULL), cosOfPmu_L2(NULL), cosOfPmu_L3(NULL),
+numberOfDistingtMomenta(-1), absNuP(NULL), absNuVarP(NULL), absGammaP(NULL), absGammaVarP(NULL),factorOfMomentum(NULL),
+numberOfDistingtMomenta_bosonic(-1), sumOfCosOfPmu(NULL), factorOfMomentum_bosonic(NULL),
 kappa_N(-1.0), lambda_N(-1.0), yukawa_N(-1.0),
 N_f(1), rho(1.0), one_ov_twoRho(0.5/rho), r(0.5),
+bosonicLoop(-1.0), bosonicLoopSet(false), useBosonicLoop(true),
 toleranceForLineMinimization(-1.0), toleranceForConvergence(-1.0), initialStepSize(-1.0), maxNumerOfIterations(100), minimizationAlgorithm(-1), minimizerInitialized(false), iteratorStoppedFlag(false),
 minimizer(NULL)
 {
@@ -21,29 +26,24 @@ minimizer(NULL)
 		exit(EXIT_FAILURE);
 	}
 	fillLatticeMomenta();
-	fillEigenvalues(); 
+	fillEigenvalues();
+	fillBosonicLoopValues();
 }
 
 
 constrainedEffectivePotential::~constrainedEffectivePotential()
 {
 	if(minimizer!=NULL){ gsl_multimin_fdfminimizer_free (minimizer); }
-	delete [] sinSquaredOfPmu_L0;
-	delete [] sinSquaredOfPmu_L1;
-	delete [] sinSquaredOfPmu_L2;
-	delete [] sinSquaredOfPmu_L3;
-	delete [] sinSquaredOfPmuHalf_L0;
-	delete [] sinSquaredOfPmuHalf_L1;
-	delete [] sinSquaredOfPmuHalf_L2;
-	delete [] sinSquaredOfPmuHalf_L3;
-	delete [] cosSquaredOfPmuHalf_L0;
-	delete [] cosSquaredOfPmuHalf_L1;
-	delete [] cosSquaredOfPmuHalf_L2;
-	delete [] cosSquaredOfPmuHalf_L3;
-	delete [] absNuP;
-	delete [] absNuVarP;
-	delete [] absGammaP;
-	delete [] absGammaVarP;
+	delete [] sinSquaredOfPmu_L0; delete [] sinSquaredOfPmu_L1; 
+	delete [] sinSquaredOfPmu_L2; delete [] sinSquaredOfPmu_L3;
+	delete [] sinSquaredOfPmuHalf_L0; delete [] sinSquaredOfPmuHalf_L1;
+	delete [] sinSquaredOfPmuHalf_L2; delete [] sinSquaredOfPmuHalf_L3;
+	delete [] cosSquaredOfPmuHalf_L0; delete [] cosSquaredOfPmuHalf_L1;
+	delete [] cosSquaredOfPmuHalf_L2; delete [] cosSquaredOfPmuHalf_L3;
+	delete [] cosOfPmu_L0; delete [] cosOfPmu_L1;
+	delete [] cosOfPmu_L2; delete [] cosOfPmu_L3;
+	delete [] absNuP; delete [] absNuVarP;
+	delete [] absGammaP; delete [] absGammaVarP;
 	delete [] factorOfMomentum;
 }
 
@@ -59,6 +59,7 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 	sinSquaredOfPmu_L1 = new double [L1]; sinSquaredOfPmuHalf_L1 = new double [L1]; cosSquaredOfPmuHalf_L1 = new double [L1];
 	sinSquaredOfPmu_L2 = new double [L2]; sinSquaredOfPmuHalf_L2 = new double [L2]; cosSquaredOfPmuHalf_L2 = new double [L2];
 	sinSquaredOfPmu_L3 = new double [L3]; sinSquaredOfPmuHalf_L3 = new double [L3]; cosSquaredOfPmuHalf_L3 = new double [L3];
+	cosOfPmu_L0 = new double [L0]; cosOfPmu_L1 = new double [L1]; cosOfPmu_L2 = new double [L2]; cosOfPmu_L3 = new double [L3];
 	double p,sinP,cosP;
 	for(int i=0; i<L0; ++i)
 	{
@@ -66,6 +67,7 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 		sinP=sin(p); sinSquaredOfPmu_L0[i]=sinP*sinP;
 		sinP=sin(0.5*p); sinSquaredOfPmuHalf_L0[i]=sinP*sinP;
 		cosP=cos(0.5*p); cosSquaredOfPmuHalf_L0[i]=cosP*cosP;
+		cosP=cos(p); cosOfPmu_L0[i]=cosP;
 // 		std::cout <<"l0 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L0[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L0[i] <<std::endl;
 	}
 	for(int i=0; i<L1; ++i)
@@ -74,6 +76,7 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 		sinP=sin(p); sinSquaredOfPmu_L1[i]=sinP*sinP;
 		sinP=sin(0.5*p); sinSquaredOfPmuHalf_L1[i]=sinP*sinP;
 		cosP=cos(0.5*p); cosSquaredOfPmuHalf_L1[i]=cosP*cosP;
+		cosP=cos(p); cosOfPmu_L1[i]=cosP;
 // 		std::cout <<"l1 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L1[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L1[i] <<std::endl;
 	}
 	for(int i=0; i<L2; ++i)
@@ -82,6 +85,7 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 		sinP=sin(p); sinSquaredOfPmu_L2[i]=sinP*sinP;
 		sinP=sin(0.5*p); sinSquaredOfPmuHalf_L2[i]=sinP*sinP;
 		cosP=cos(0.5*p); cosSquaredOfPmuHalf_L2[i]=cosP*cosP;
+		cosP=cos(p); cosOfPmu_L2[i]=cosP;
 // 		std::cout <<"l2 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L2[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L2[i] <<std::endl;
 	}
 	for(int i=0; i<L3; ++i)
@@ -90,6 +94,8 @@ void constrainedEffectivePotential::fillLatticeMomenta()
 		sinP=sin(p); sinSquaredOfPmu_L3[i]=sinP*sinP;
 		sinP=sin(0.5*p); sinSquaredOfPmuHalf_L3[i]=sinP*sinP;
 		cosP=cos(0.5*p); cosSquaredOfPmuHalf_L3[i]=cosP*cosP;
+		p=2.0 * PI * i * one_ov_L3;
+		cosP=cos(p); cosOfPmu_L3[i]=cosP;
 // 		std::cout <<"l3 = " << i <<"   p_mu = " <<p <<"   sinSquaredOfPmu = " <<sinSquaredOfPmu_L3[i] <<"   sinSquaredOfPmuHalf = " <<sinSquaredOfPmuHalf_L3[i] <<std::endl;
 	}
 }
@@ -104,12 +110,6 @@ void constrainedEffectivePotential::fillEigenvalues()
 	delete [] factorOfMomentum;
 	if(!(L0==L1 && L0==L2))
 	{
-// 		int dummyVolume=L0*L1*L2*L3;
-// 		if(dummyVolume<0)
-// 		{
-// 			std::cerr <<"Error, volume too large for int." <<std::endl;
-// 			exit(EXIT_FAILURE); 
-// 		}
 		int L0_half=L0/2;
 		int L1_half=L1/2;
 		int L2_half=L2/2;
@@ -717,17 +717,524 @@ void constrainedEffectivePotential::fillEigenvalues()
 	}
 }
 
-void constrainedEffectivePotential::set_kappa_N(double new_k){ kappa_N=new_k; reInitializeMinimizer();}
-void constrainedEffectivePotential::set_lambda_N(double new_l){ lambda_N=new_l; reInitializeMinimizer();}
+
+
+
+void constrainedEffectivePotential::fillBosonicLoopValues()
+{
+	delete [] sumOfCosOfPmu; delete [] factorOfMomentum_bosonic;
+	if(  !(L0==L1 && L0==L2))
+	{
+		int L0_half=L0/2, L1_half=L1/2, L2_half=L2/2, L3_half=L3/2;
+		int dummyVolume=(L0_half+1)*(L1_half+1)*(L2_half+1)*(L3_half+1)-2;
+		numberOfDistingtMomenta_bosonic=dummyVolume;
+		std::cout <<"numberOfDistingtMomenta_bosonic: "<<numberOfDistingtMomenta_bosonic <<std::endl;
+		sumOfCosOfPmu = new double [dummyVolume];
+		factorOfMomentum_bosonic = new double [dummyVolume];
+		double fac_l0,fac_l1,fac_l2,fac_l3;
+		size_t counter=0;
+		for(int l0=0; l0<=L0_half; ++l0)
+		{
+			if(l0==0 || l0==L0_half){ fac_l0=1.0; }else{ fac_l0=2.0; }
+			for(int l1=0; l1<=L1_half; ++l1)
+			{
+				if(l1==0 || l1==L1_half){ fac_l1=1.0; }else{ fac_l1=2.0; }
+				for(int l2=0; l2<=L2_half; ++l2)
+				{
+					if(l2==0 || l2==L2_half){ fac_l2=1.0; }else{ fac_l2=2.0; }
+					for(int l3=((l0+l1+l2)?(0):(1)); l3<=( (l0==L0_half && l1==L1_half && l2==L2_half)?(L3_half-1):L3_half ); ++l3)
+					{
+						if(l3==0 || l3==L3_half){ fac_l3=1.0; }else{ fac_l3=2.0; }
+						
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = fac_l0*fac_l1*fac_l2*fac_l3;
+						++counter;
+					}
+				}
+			}
+		}
+		std::cout <<"Momenta entries in sumOfCosOfPmu: " <<counter <<std::endl;
+	}
+	else
+	{
+		int Lhalf=L0/2;
+		int LT_half=L3/2;
+		size_t counter=0;
+		//do it twice to count
+		for(int l3=1; l3<LT_half; ++l3)
+		{
+			for(int l0=1; l0<Lhalf; ++l0)
+			{
+				for(int l1=l0+1; l1<Lhalf; ++l1)
+				{
+					for(int l2=l1+1; l2<Lhalf; ++l2)
+					{
+						//p,q,r 48
+						l2=l2; //no compiler warning
+						++counter;
+					}
+					{
+						int l2=l1;
+						//p,q,q, 24
+						++counter;
+						l2=l0;
+						//p,p,q, 24
+						++counter;
+						l2=Lhalf;
+						//p,q,L/2 24
+						++counter;
+						l2=0;
+						//0,p,q, 24
+						++counter;
+					}
+				}
+				{
+					int l1=l0;
+					{
+						int l2=l1;
+						//p,p,p, 8
+						++counter;
+						l2=Lhalf;
+						//p,p,L/2 12
+						++counter;
+						l2=0;
+						//0,p,p, 12
+						++counter;
+					}
+					l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//p,L/2,L/2, 6
+						++counter;
+						l2=0;
+						//0,p,L/2, 12
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,p  6
+						++counter;
+					}
+				}
+			}
+			{
+				int l0=Lhalf;
+				{
+					int l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//L/2,L/2,L/2, 1
+						++counter;
+						l2=0;
+						//0,L/2,L/2, 3
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,L/2, 3
+						++counter;
+					}
+				}
+				l0=0;
+				{
+					int l1=0;
+					l1=l1; //no compiler warning
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,0, 1
+						++counter;
+					}
+				}
+			}
+		}
+		//now do the same thing for l3=0 and l3=Lt_half
+		for(int l3=0; l3<=LT_half; l3+=LT_half )
+		{
+			for(int l0=1; l0<Lhalf; ++l0)
+			{
+				for(int l1=l0+1; l1<Lhalf; ++l1)
+				{
+					for(int l2=l1+1; l2<Lhalf; ++l2)
+					{
+						//p,q,r 48
+						++counter;
+					}
+					{
+						int l2=l1;
+						//p,q,q, 24
+						++counter;
+						l2=l0;
+						//p,p,q, 24
+						++counter;
+						l2=Lhalf;
+						//p,q,L/2 24
+						++counter;
+						l2=0;
+						//0,p,q, 24
+						++counter;
+					}
+				}
+				{
+					int l1=l0;
+					{
+						int l2=l1;
+						//p,p,p, 8
+						++counter;
+						l2=Lhalf;
+						//p,p,L/2 12
+						++counter;
+						l2=0;
+						//0,p,p, 12
+						++counter;
+					}
+					l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//p,L/2,L/2, 6
+						++counter;
+						l2=0;
+						//0,p,L/2, 12
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,p  6
+						++counter;
+					}
+				}
+			}
+			{
+				int l0=Lhalf;
+				{
+					int l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//L/2,L/2,L/2, 1
+						if(l3!=LT_half){++counter; }
+						l2=0;
+						//0,L/2,L/2, 3
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,L/2, 3
+						++counter;
+					}
+				}
+				l0=0;
+				{
+					int l1=0;
+					l1=l1; //no compiler warning
+					{
+						int l2=0;
+						l2=l2;//no compiler warning
+						//0,0,0, 1
+						if(l3 != 0){++counter;}
+					}
+				}
+			}
+		}
+		numberOfDistingtMomenta_bosonic=counter;
+		std::cout <<"numberOfDistingtMomenta_bosonic: "<<numberOfDistingtMomenta_bosonic <<std::endl;
+		sumOfCosOfPmu = new double [numberOfDistingtMomenta_bosonic];
+		factorOfMomentum_bosonic = new double [numberOfDistingtMomenta_bosonic];
+		counter=0;
+		for(int l3=1; l3<LT_half; ++l3)
+		{
+			for(int l0=1; l0<Lhalf; ++l0)
+			{
+				for(int l1=l0+1; l1<Lhalf; ++l1)
+				{
+					for(int l2=l1+1; l2<Lhalf; ++l2)
+					{
+						//p,q,r 48
+						l2=l2; //no compiler warning
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 96.0;
+						++counter;
+					}
+					{
+						int l2=l1;
+						//p,q,q, 24
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 48.0;
+						++counter;
+						l2=l0;
+						//p,p,q, 24
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 48.0;
+						++counter;
+						l2=Lhalf;
+						//p,q,L/2 24
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 48.0;
+						++counter;
+						l2=0;
+						//0,p,q, 24
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 48.0;
+						++counter;
+					}
+				}
+				{
+					int l1=l0;
+					{
+						int l2=l1;
+						//p,p,p, 8
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 16.0;
+						++counter;
+						l2=Lhalf;
+						//p,p,L/2 12
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 24.0;
+						++counter;
+						l2=0;
+						//0,p,p, 12
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 24.0;
+						++counter;
+					}
+					l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//p,L/2,L/2, 6
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 12.0;
+						++counter;
+						l2=0;
+						//0,p,L/2, 12
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 24.0;
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,p  6
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 12.0;
+						++counter;
+					}
+				}
+			}
+			{
+				int l0=Lhalf;
+				{
+					int l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//L/2,L/2,L/2, 1
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 2.0;
+						++counter;
+						l2=0;
+						//0,L/2,L/2, 3
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 6.0;
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,L/2, 3
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 6.0;
+						++counter;
+					}
+				}
+				l0=0;
+				{
+					int l1=0;
+					l1=l1; //no compiler warning
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,0, 1
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 2.0;
+						++counter;
+					}
+				}
+			}
+		}
+		//now do the same thing for l3=0 and l3=Lt_half
+		for(int l3=0; l3<=LT_half; l3+=LT_half )
+		{
+			for(int l0=1; l0<Lhalf; ++l0)
+			{
+				for(int l1=l0+1; l1<Lhalf; ++l1)
+				{
+					for(int l2=l1+1; l2<Lhalf; ++l2)
+					{
+						//p,q,r 48
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 48.0;
+						++counter;
+					}
+					{
+						int l2=l1;
+						//p,q,q, 24
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 24.0;
+						++counter;
+						l2=l0;
+						//p,p,q, 24
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 24.0;
+						++counter;
+						l2=Lhalf;
+						//p,q,L/2 24
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 24.0;
+						++counter;
+						l2=0;
+						//0,p,q, 24
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 24.0;
+						++counter;
+					}
+				}
+				{
+					int l1=l0;
+					{
+						int l2=l1;
+						//p,p,p, 8
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 8.0;
+						++counter;
+						l2=Lhalf;
+						//p,p,L/2 12
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 12.0;
+						++counter;
+						l2=0;
+						//0,p,p, 12
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 12.0;
+						++counter;
+					}
+					l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//p,L/2,L/2, 6
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 6.0;
+						++counter;
+						l2=0;
+						//0,p,L/2, 12
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 12.0;
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,p  6
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 6.0;
+						++counter;
+					}
+				}
+			}
+			{
+				int l0=Lhalf;
+				{
+					int l1=Lhalf;
+					{
+						int l2=Lhalf;
+						//L/2,L/2,L/2, 1
+						if(l3!=LT_half)
+						{
+							sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+							factorOfMomentum_bosonic[counter] = 1.0;
+							++counter; 
+						}
+						l2=0;
+						//0,L/2,L/2, 3
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 3.0;
+						++counter;
+					}
+					l1=0;
+					{
+						int l2=0;
+						l2=l2; //no compiler warning
+						//0,0,L/2, 3
+						sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+						factorOfMomentum_bosonic[counter] = 3.0;
+						++counter;
+					}
+				}
+				l0=0;
+				{
+					int l1=0;
+					l1=l1; //no compiler warning
+					{
+						int l2=0;
+						l2=l2;//no compiler warning
+						//0,0,0, 1
+						if(l3 != 0)
+						{
+							sumOfCosOfPmu[counter]=cosOfPmu_L0[l0]+cosOfPmu_L1[l1]+cosOfPmu_L2[l2]+cosOfPmu_L3[l3];
+							factorOfMomentum_bosonic[counter] = 1.0;
+							++counter;
+						}
+					}
+				}
+			}
+		}
+	}
+		
+	
+
+}
+
+void constrainedEffectivePotential::set_kappa_N(double new_k)
+{
+	if( new_k==kappa_N ){ return; }
+	kappa_N=new_k; reInitializeMinimizer();
+	if(bosonicLoopSet && useBosonicLoop)
+	{
+		bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();
+	}
+}
+void constrainedEffectivePotential::set_lambda_N(double new_l)
+{ 
+	if( new_l==lambda_N ){ return; }
+	lambda_N=new_l; reInitializeMinimizer();
+	if(bosonicLoopSet && useBosonicLoop)
+	{
+		bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();
+	}
+}
 void constrainedEffectivePotential::set_yukawa_N(double new_y){ yukawa_N=new_y; reInitializeMinimizer();}
 void constrainedEffectivePotential::set_kappa_lambda_yukawa_N(double new_k, double new_l, double new_y)
 {
+	bool change=(new_l!=lambda_N || new_k!=kappa_N);
 	kappa_N=new_k; lambda_N=new_l; yukawa_N=new_y; reInitializeMinimizer();
+	if(bosonicLoopSet && useBosonicLoop && change)
+	{
+		bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();
+	}
 }
 
 void constrainedEffectivePotential::set_N_f(int new_N){ N_f=new_N; }
 void constrainedEffectivePotential::set_rho(double new_rho){ rho=new_rho; one_ov_twoRho=0.5/rho; fillEigenvalues(); reInitializeMinimizer(); }
 void constrainedEffectivePotential::set_r(double new_r){ r=new_r; fillEigenvalues(); reInitializeMinimizer(); }
+void constrainedEffectivePotential::set_useBosonicLoop(bool newSet){ useBosonicLoop=newSet; }
 
 void constrainedEffectivePotential::set_toleranceForLineMinimization(double new_tol){ toleranceForLineMinimization=new_tol; }
 void constrainedEffectivePotential::set_toleranceForConvergence(double new_tol){ toleranceForConvergence=new_tol; }
@@ -1016,7 +1523,12 @@ void constrainedEffectivePotential::getActualMinimizerGradient(double &dU_ov_dm,
 	dU_ov_ds=gsl_vector_get( gsl_multimin_fdfminimizer_gradient(minimizer),1);	
 }
 
-
+void constrainedEffectivePotential::getActualSecondDerivative(double &d2U_ov_dmdm, double &d2U_ov_dsds, double &d2U_ov_dmds)
+{
+	double m,s;
+	getActualMinimizerLocation(m, s);
+	computeConstrainedEffectivePotential_secondDerivatives(m, s, d2U_ov_dmdm, d2U_ov_dsds, d2U_ov_dmds);
+}
 
 
 

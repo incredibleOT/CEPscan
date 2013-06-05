@@ -10,7 +10,7 @@ CXXFLAGS= -Wall -Wextra -Wno-long-long -pedantic
 OFILES = constrainedEffectivePotential.o CEPscan_helper.o
 
 
-CEPFiles= constrainedEffectivePotential_computeFunctionOnly.cc constrainedEffectivePotential_computeGradientOnly.cc constrainedEffectivePotential_computeFunctionAndGradient.cc
+CEPFiles= constrainedEffectivePotential_computeFunctionOnly.cc constrainedEffectivePotential_computeGradientOnly.cc constrainedEffectivePotential_computeFunctionAndGradient.cc constrainedEffectivePotential_computeBosonicLoop.cc constrainedEffectivePotential_computeSecondDerivative.cc
 
 INCL=-I/opt/products/gsl/1.15/include
 

@@ -27,9 +27,11 @@ void CEPscan_helper::prepareParameterMaps( std::map< std::string, double > &para
 	paraD["yukawa_N_max"] = 0.0;
 	paraD["yukawa_N_step"] = 0.0;
 	
-	
 	paraI["interpret_yukawa_as_continuum"]=0;
 	paraI["interpret_lambda_as_continuum"]=0;
+	
+	paraI["include_bosonic_loop"]=0;
+	
 	//directly set to default values
 	paraI["N_f"]=1;
 	paraD["rho"]=1.0;
@@ -258,6 +260,13 @@ bool CEPscan_helper::checkConsistencyOfParameters( std::map< std::string, double
 		}
 	}
 	
+	//include_bosonic_loop
+	if( !paraIsSet["include_bosonic_loop"] )
+	{
+		std::cerr <<"Error, include_bosonic_loop not set" <<std::endl;
+		return false;
+	}
+	
 	//iteration stopping
 	if( !paraIsSet["iteration_stopping_criteria"] )
 	{
@@ -428,7 +437,7 @@ bool CEPscan_helper::printResultsVectorToStream(const std::vector< resultForOutp
 	output.precision(12);
 	for(std::vector< resultForOutput >::const_iterator iter=results.begin(); iter!=results.end(); ++iter)
 	{
-		if( !( output <<iter->kappa_N <<" " <<iter->lambda_N <<" " <<iter->yukawa_N <<" " <<iter->magnetization <<" " <<iter->staggered_magnetization <<" " <<iter->potential <<std::endl ) )
+		if( !( output <<iter->kappa_N <<" " <<iter->lambda_N <<" " <<iter->yukawa_N <<" " <<iter->magnetization <<" " <<iter->staggered_magnetization <<" " <<iter->potential <<" " <<iter->d2U_ov_dmdm <<" " <<iter->d2U_ov_dsds <<" " <<iter->d2U_ov_dmds  <<std::endl ) )
 		{
 			std::cerr <<"Error during output of results" <<std::endl;
 			return false;

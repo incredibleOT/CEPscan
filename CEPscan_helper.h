@@ -33,6 +33,9 @@ namespace CEPscan_helper
 		double magnetization;
 		double staggered_magnetization;
 		double potential;
+		double d2U_ov_dmdm;
+		double d2U_ov_dsds;
+		double d2U_ov_dmds;
 	};
 	
 	void findStartByTwo_1d_Scans(std::set< double > &testValues_magnetization, std::set< double > &testValues_staggeredMagnetization, constrainedEffectivePotential &CEP, double &start_m, double &start_s);

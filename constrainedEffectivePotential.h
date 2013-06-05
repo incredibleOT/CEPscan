@@ -22,12 +22,18 @@ class constrainedEffectivePotential
 	int L0, L1, L2, L3; //only L3 can be chosen antiperiodic
 	bool antiperiodicBC_L3;
 	
+	//fermionic momenta
 	double *sinSquaredOfPmu_L0, *sinSquaredOfPmu_L1, *sinSquaredOfPmu_L2, *sinSquaredOfPmu_L3;
 	double *sinSquaredOfPmuHalf_L0, *sinSquaredOfPmuHalf_L1, *sinSquaredOfPmuHalf_L2, *sinSquaredOfPmuHalf_L3;
 	double *cosSquaredOfPmuHalf_L0, *cosSquaredOfPmuHalf_L1, *cosSquaredOfPmuHalf_L2, *cosSquaredOfPmuHalf_L3;
+	//for the bosonic sum
+	double *cosOfPmu_L0, *cosOfPmu_L1, *cosOfPmu_L2, *cosOfPmu_L3;
+	
 	
 	int numberOfDistingtMomenta;
-	double *absNuP, *absNuVarP, *absGammaP, *absGammaVarP, *factorOfMomentum; 
+	double *absNuP, *absNuVarP, *absGammaP, *absGammaVarP, *factorOfMomentum;
+	int numberOfDistingtMomenta_bosonic;
+	double *sumOfCosOfPmu, *factorOfMomentum_bosonic;
 	
 	double kappa_N; //==kappa
 	double lambda_N; //==lambda * N_f
@@ -38,6 +44,10 @@ class constrainedEffectivePotential
 	double one_ov_twoRho;
 	double r;
 	
+	//stores sum_p {1/(2-4lambda_N-4kappa*sum(cos(p_mu)))}
+	double bosonicLoop;
+	bool bosonicLoopSet;
+	bool useBosonicLoop;
 	//parameters for the minimization
 	double toleranceForLineMinimization;
 	double toleranceForConvergence;
@@ -75,6 +85,8 @@ class constrainedEffectivePotential
 	void set_rho(double new_rho);
 	void set_r(double new_r);
 	
+	void set_useBosonicLoop(bool newSet);
+	
 	void set_toleranceForLineMinimization(double new_tol);
 	void set_toleranceForConvergence(double new_tol);
 	void set_initialStepSize(double new_step);
@@ -100,6 +112,7 @@ class constrainedEffectivePotential
 	private: 
 	void fillLatticeMomenta();
 	void fillEigenvalues();
+	void fillBosonicLoopValues();
 
 	//computation of eigenvalues
 	std::complex< double > computeAnalyticalEigenvalue(const double p0, const double p1, const double p2, const double p3);
@@ -110,6 +123,10 @@ class constrainedEffectivePotential
 	
 	
 	public:
+	
+	double computeBosonicPropagatorSum_qad();
+	double computeBosonicPropagatorSum_fromStoredSumOfCos();
+	
 	double computeConstrainedEffectivePotential_onlyFunction(const double magnetization, const double staggeredMagnetization);
 	//versions of computing the function only
 	//computation of the fermionic contribution
@@ -155,7 +172,13 @@ class constrainedEffectivePotential
 	//for nicer code
 	void fermionicContributionInline_FunctionAndGradient_FromStoredEigenvalues(int index, double ySq_mSq, double ySq_sSq, double &Uf, double &dUf_ov_dm, double &dUf_ov_ds);
 	
+	//the second derivative
+	void computeConstrainedEffectivePotential_secondDerivatives(const double magnetization, const double staggeredMagnetization, double &d2U_ov_dmdm, double &d2U_ov_dsds, double &d2U_ov_dmds);
 	
+	
+	void compute_fermionicContribution_secondDerivatives_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization, double &d2Uf_ov_dmdm, double &d2Uf_ov_dsds, double &d2Uf_ov_dmds);
+	
+	void fermionicContributionInline_secondDerivatives_FromStoredEigenvalues(int index, const double ySq_mSq, const double ySq_sSq, double &d2Uf_ov_dmdm, double &d2Uf_ov_dsds, double &d2Uf_ov_dmds);
 
 	public: 
 	
@@ -181,6 +204,7 @@ class constrainedEffectivePotential
 	void getActualMinimizerLocation(double &magnetization, double &staggeredMagnetization);
 	double getActualMinimizerValue();
 	void getActualMinimizerGradient(double &dU_ov_dm, double &dU_ov_ds);
+	void getActualSecondDerivative(double &d2U_ov_dmdm, double &d2U_ov_dsds, double &d2U_ov_dmds);
 	
 	
 

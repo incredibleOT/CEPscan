@@ -60,6 +60,9 @@ int main(int narg,char **arg)
 	if(parametersIsSet["rho"] && parametersDouble["rho"]!=CEP.get_rho()){ CEP.set_rho(parametersDouble["rho"]); }
 	if(parametersIsSet["r"] && parametersDouble["r"]!=CEP.get_r()){ CEP.set_rho(parametersDouble["r"]); }
 	
+	//use bosonic loop
+	CEP.set_useBosonicLoop(parametersInt["include_bosonic_loop"]);
+	
 	//set minimization details
 	CEP.set_toleranceForLineMinimization(parametersDouble["tolerance_for_line_minimization"]);
 	if(parametersIsSet["tolerance_for_convergence"])
@@ -189,6 +192,7 @@ int main(int narg,char **arg)
 					dummyResult.magnetization=std::abs(start_m);
 					dummyResult.staggered_magnetization=std::abs(start_s);
 					dummyResult.potential=CEP.getActualMinimizerValue();
+					CEP.getActualSecondDerivative(dummyResult.d2U_ov_dmdm, dummyResult.d2U_ov_dsds, dummyResult.d2U_ov_dmds);
 					results.push_back(dummyResult);
 				}
 					
@@ -208,15 +212,73 @@ int main(int narg,char **arg)
 		std::ofstream outputFile;
 		if(parametersIsSet["outputfile"])
 		{
-			outputFile.open( parametersString["outputfile"].c_str() );
+			std::string outputFileName(parametersString["outputfile"]);
+			if( outputFileName.find("[Ls]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				ss <<"L" <<parametersInt["L_s"];
+				outputFileName.replace(outputFileName.find("[Ls]"),4, ss.str() );
+			}
+			if( outputFileName.find("[Lt]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				ss <<"T" <<parametersInt["L_t"];
+				outputFileName.replace(outputFileName.find("[Lt]"),4, ss.str() );
+			}
+			if( outputFileName.find("[k]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				ss <<"k_";
+				ss.precision(7);
+				if(parametersInt["scan_kappa_N"]){ss <<parametersDouble["kappa_N_min"] <<"_"<<parametersDouble["kappa_N_max"]; }
+				else {ss <<parametersDouble["kappa_N"]; }
+				outputFileName.replace(outputFileName.find("[k]"),3, ss.str() );
+			}
+			if( outputFileName.find("[l]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				ss <<"l_";
+				ss.precision(7);
+				if(parametersInt["scan_lambda_N"]){ss <<parametersDouble["lambda_N_min"] <<"_"<<parametersDouble["lambda_N_max"]; }
+				else {ss <<parametersDouble["lambda_N"]; }
+				outputFileName.replace(outputFileName.find("[l]"),3, ss.str() );
+			}
+			if( outputFileName.find("[y]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				ss <<"y_";
+				ss.precision(7);
+				if(parametersInt["scan_yukawa_N"]){ss <<parametersDouble["yukawa_N_min"] <<"_"<<parametersDouble["yukawa_N_max"]; }
+				else {ss <<parametersDouble["yukawa_N"]; }
+				outputFileName.replace(outputFileName.find("[y]"),3, ss.str() );
+			}
+			if( outputFileName.find("[loop]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				if(parametersInt["include_bosonic_loop"]){ ss <<"withLoop";}
+				else{ ss <<"noLoop";}
+				outputFileName.replace(outputFileName.find("[loop]"),6, ss.str() );
+			}
+			if( outputFileName.find("[bc]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				if(parametersInt["antiperiodic_L_t"]){ ss <<"aBC";}
+				else{ ss <<"pBC";}
+				outputFileName.replace(outputFileName.find("[bc]"),4, ss.str() );
+			}
+			
+			cout <<"output fileName: " << outputFileName <<endl;
+			
+			
+			outputFile.open( outputFileName.c_str() );
 			if(!outputFile.good())
 			{
-				cerr <<"Error opening output file" <<endl <<parametersString["outputfile"] <<endl;
+				cerr <<"Error opening output file" <<endl <<outputFileName <<endl;
 				cerr <<"send ouput to cout!" <<endl;
 			}
 			else
 			{
-				cout <<"opened file:" <<endl <<parametersString["outputfile"] <<endl;
+				cout <<"opened file:" <<endl <<outputFileName <<endl;
 				fileOK=true; 
 			}
 		}
@@ -226,7 +288,7 @@ int main(int narg,char **arg)
 		output <<"# parameters set:" <<endl;
 		CEPscan_helper::streamSetParameterMaps( parametersDouble, parametersInt, parametersString, parametersIsSet, outputFile, "#");
 		output <<"# Output format is:" <<endl;
-		output <<"# kappa_N    lambda_N    yukawa_N    Magnetization    stageredMagnetization    minimalValue" <<endl;
+		output <<"# kappa_N   lambda_N   yukawa_N   Magnetization   stageredMagnetization   U_min   d2U_ov_dmdm   d2U_ov_dsds   d2U_ov_dmds" <<endl;
 		CEPscan_helper::printResultsVectorToStream( results, output );
 		outputFile.close();
 	}

@@ -19,141 +19,224 @@ int main(int narg,char **arg)
 {
 	
 // 	int L0(4), L1(4), L2(4), L3(4);
-// 	int L0(16), L1(16), L2(16), L3(32);
+	int L0(16), L1(16), L2(16), L3(32);
 // 	int L0(32), L1(32), L2(32), L3(64);
-	int L0(64), L1(64), L2(64), L3(128);
+// 	int L0(64), L1(64), L2(64), L3(128);
 // 	int L0(8), L1(10), L2(14), L3(22);
 // 	bool antiL3(false);
 	bool antiL3(false);
 	
 // 	double y=175.0/246.0;
-	double y=4.0;
+	double y=1.0;
 	
-	double kappa=-0.5;
-	double lambda=0.3;
+	double kappa=+0.00;
+	double lambda=0.0;
 	
 	constrainedEffectivePotential CEP(L0,L1,L2,L3,antiL3);
 	cout <<"constrainedEffectivePotential initialized" <<endl;
 	CEP.set_yukawa_N(y);
 	CEP.set_kappa_N(kappa);
 	CEP.set_lambda_N(lambda);
+// 	CEP.set_useBosonicLoop(false);
 	
 	
 	
 	
-	/*
 	double mCentral=0.2;
 	double sCentral=0.4;
 	double mStep=0.0001;
 	double sStep=0.0001;
-	int steps=5;
+	int steps=1;
 	int maxCounter(2*steps+1);
 	
 	double *resultsMvar = new double [maxCounter];
 	double *resultsSvar = new double [maxCounter];
 	double m,s;
 	
-	
-	
-	//test derivative
-	for(int im=0; im<maxCounter; ++im)
-	{
-		m=mCentral-mStep*(steps-im);
-		resultsMvar[im]=CEP.computeConstrainedEffectivePotential_onlyFunction(m,sCentral);
-		s=sCentral-sStep*(steps-im);
-		resultsSvar[im]=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,s);
-	}
-	
-	for(int i=0; i<maxCounter; ++i)
 	{
 		cout.precision(15);
-		m=mCentral-mStep*(steps-i);
-		s=sCentral-sStep*(steps-i);
-		cout <<"U(m=" <<m <<", s=" <<sCentral <<") = " <<resultsMvar[i] <<"   U(m=" <<mCentral <<", s=" <<s <<") = " <<resultsSvar[i] <<endl;
+		double mCentral(0.3), sCentral(0.1);
+		double eps=0.00001;
+		double result(0.0), dUdm(0.0), dUds(0.0), dummy(0.0),dUdm2(0.0), dUds2(0.0);
+		double dUdmdm(0.0), dUdsds(0.0), dUdmds(0.0);
+		double eps1(0.00001), eps2(0.000001), eps3(0.0000001);
+		double dUdmdm1(0.0), dUdsds1(0.0), dUdmds1(0.0);
+		double dUdmdm2(0.0), dUdsds2(0.0), dUdmds2(0.0);
+		double dUdmdm3(0.0), dUdsds3(0.0), dUdmds3(0.0);
+		
+		/*
+		cout <<"From function only:" <<endl;
+		result=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral);
+		cout <<"U = " << result <<endl;
+		dUdm=(CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral+eps,sCentral) - CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral-eps,sCentral))/(2.0*eps);
+		cout <<"dU/dm= " <<dUdm <<endl;
+		dUds=(CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral+eps) - CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral-eps))/(2.0*eps);
+		cout <<"dU/ds= " <<dUds <<endl;
+		
+		cout <<endl <<"From gradient only:" <<endl;
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral, dUdm, dUds);
+		cout <<"dU/dm= " <<dUdm <<endl;
+		cout <<"dU/ds= " <<dUds <<endl;
+		
+		cout <<endl <<"From FunctionAndGradient:" <<endl;
+		CEP.computeConstrainedEffectivePotential_FunctionAndGradient(mCentral, sCentral, result, dUdm, dUds);
+		cout <<"U = " << result <<endl;
+		cout <<"dU/dm= " <<dUdm <<endl;
+		cout <<"dU/ds= " <<dUds <<endl;
+		*/
+		
+		
+		cout <<endl <<"Second derivatives from the gradient" <<endl;
+		
+		
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral+eps1, sCentral, dUdm, dUds);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral-eps1, sCentral, dUdm2, dUds2);
+		dUdmdm1=0.5/eps1*(dUdm-dUdm2);
+		dUdmds1=0.5/eps1*(dUds-dUds2);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral+eps1, dUdm, dUds);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral-eps1, dUdm2, dUds2);
+		dUdsds1=0.5/eps1*(dUds-dUds2);
+		
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral+eps2, sCentral, dUdm, dUds);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral-eps2, sCentral, dUdm2, dUds2);
+		dUdmdm2=0.5/eps2*(dUdm-dUdm2);
+		dUdmds2=0.5/eps2*(dUds-dUds2);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral+eps2, dUdm, dUds);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral-eps2, dUdm2, dUds2);
+		dUdsds2=0.5/eps2*(dUds-dUds2);
+		
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral+eps3, sCentral, dUdm, dUds);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral-eps3, sCentral, dUdm2, dUds2);
+		dUdmdm3=0.5/eps3*(dUdm-dUdm2);
+		dUdmds3=0.5/eps3*(dUds-dUds2);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral+eps3, dUdm, dUds);
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral-eps3, dUdm2, dUds2);
+		dUdsds3=0.5/eps3*(dUds-dUds2);
+		
+		cout <<"eps=" <<eps1 <<"   d/dm(dU/dm)=" <<dUdmdm1 <<"   d/ds(dU/ds)=" <<dUdsds1 <<"   d/dm(dU/ds)=" <<dUdmds1 <<endl;
+		cout <<"eps=" <<eps2 <<"   d/dm(dU/dm)=" <<dUdmdm2 <<"   d/ds(dU/ds)=" <<dUdsds2 <<"   d/dm(dU/ds)=" <<dUdmds2 <<endl;
+		cout <<"eps=" <<eps3 <<"   d/dm(dU/dm)=" <<dUdmdm3 <<"   d/ds(dU/ds)=" <<dUdsds3 <<"   d/dm(dU/ds)=" <<dUdmds3 <<endl;
+		
+		cout <<endl <<"Second derivatives from second derivative" <<endl;
+		CEP.computeConstrainedEffectivePotential_secondDerivatives(mCentral, sCentral, dUdmdm, dUdsds, dUdmds);
+		cout <<"d^2U/dm^2=" <<dUdmdm <<"   d^2U/ds^2=" <<dUdsds <<"   d^2U/dmds= " <<dUdmds <<endl;
+		
+		cout <<endl <<"relative difference" <<endl;
+		
+		cout <<"eps=" <<eps1 <<"   d^2U/dm^2:" <<0.5*(dUdmdm1-dUdmdm)/(dUdmdm1+dUdmdm);
+		cout <<"   d^2U/dm^2:" <<0.5*(dUdsds1-dUdsds)/(dUdsds1+dUdsds);
+		cout <<"   d^2U/dm^2:" <<0.5*(dUdmds1-dUdmds)/(dUdmds1+dUdmds) <<endl;
+		cout <<"eps=" <<eps2 <<"   d^2U/dm^2:" <<0.5*(dUdmdm2-dUdmdm)/(dUdmdm2+dUdmdm);
+		cout <<"   d^2U/dm^2:" <<0.5*(dUdsds2-dUdsds)/(dUdsds2+dUdsds);
+		cout <<"   d^2U/dm^2:" <<0.5*(dUdmds2-dUdmds)/(dUdmds2+dUdmds) <<endl;
+		cout <<"eps=" <<eps3 <<"   d^2U/dm^2:" <<0.5*(dUdmdm3-dUdmdm)/(dUdmdm3+dUdmdm);
+		cout <<"   d^2U/dm^2:" <<0.5*(dUdsds3-dUdsds)/(dUdsds3+dUdsds);
+		cout <<"   d^2U/dm^2:" <<0.5*(dUdmds3-dUdmds)/(dUdmds3+dUdmds) <<endl;
+		
+		
+		
 	}
-	for(int i=0; i<steps; ++i)
-	{
-		cout.precision(15);
-		double dist_m=mStep*(i+1);
-		double dist_s=sStep*(i+1);
-		cout <<"(U(m=" <<mCentral <<"+" <<dist_m <<", s=" <<sCentral <<") -  U(m=" <<mCentral <<"-" <<dist_m <<", s=" <<sCentral <<"))/"<<2*dist_m <<"  = " 
-		     <<(resultsMvar[steps+1+i]-resultsMvar[steps-i-1])/(2.0*dist_m) <<endl;
-		     
-		cout <<"(U(m=" <<mCentral <<", s=" <<sCentral <<"+" <<dist_s <<") -  U(m=" <<mCentral <<", s=" <<sCentral <<"-" <<dist_s <<"))/"<<2*dist_s <<"  = " 
-		     <<(resultsSvar[steps+1+i]-resultsSvar[steps-1-i])/(2.0*dist_s) <<endl;
-	}
-	
-	double res_U_dm(0.0), res_U_ds(0.0);
-	CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral,sCentral, res_U_dm, res_U_ds);
-	cout <<"dU/dm(m=" <<mCentral <<", s=" <<sCentral <<") = " <<res_U_dm <<"   dU/ds(m=" <<mCentral <<", s=" <<sCentral <<") = " <<res_U_ds <<endl;
-	
-	delete [] resultsMvar;
-	delete [] resultsSvar;
-	
-	//now use the function that computes teh function and the derivative at the same time
-	
-	double U(0.0),U_dm(0.0),U_ds(0.0);
-	for(int im=0; im<maxCounter; ++im)
-	{
-		m=mCentral-mStep*(steps-im);
-		CEP.computeConstrainedEffectivePotential_FunctionAndGradient(m,sCentral, U, U_dm, U_ds);
-		cout <<"m="<<m <<"  s=" <<sCentral <<"    U(m,s) = " <<U <<"   dU/dm = " <<U_dm <<"   dU/ds = " <<U_ds <<endl;
-		s=sCentral-sStep*(steps-im);
-		CEP.computeConstrainedEffectivePotential_FunctionAndGradient(mCentral,s, U, U_dm, U_ds);
-		cout <<"m="<<mCentral <<"  s=" <<s <<"    U(m,s) = " <<U <<"   dU/dm = " <<U_dm <<"   dU/ds = " <<U_ds <<endl;
-	}
 	
 	
-	cout <<endl <<"Testing the gsl version of only the function:" <<endl;
-	double resultNormal=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral);
-	gsl_vector *testVector = gsl_vector_alloc(2);
-	gsl_vector_set(testVector, 0,  mCentral);
-	gsl_vector_set(testVector, 1,  sCentral);
-	void *dummyPTR;
-	double result_gsl=CEP.computeConstrainedEffectivePotential_onlyFunction_gsl(testVector, dummyPTR);
-	cout <<"Normal result: " <<resultNormal <<"   from gsl-function: " <<result_gsl <<endl;
+// 	//test derivative
+// 	for(int im=0; im<maxCounter; ++im)
+// 	{
+// 		m=mCentral-mStep*(steps-im);
+// 		resultsMvar[im]=CEP.computeConstrainedEffectivePotential_onlyFunction(m,sCentral);
+// 		s=sCentral-sStep*(steps-im);
+// 		resultsSvar[im]=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,s);
+// 	}
+// 	
+// 	for(int i=0; i<maxCounter; ++i)
+// 	{
+// 		cout.precision(15);
+// 		m=mCentral-mStep*(steps-i);
+// 		s=sCentral-sStep*(steps-i);
+// 		cout <<"U(m=" <<m <<", s=" <<sCentral <<") = " <<resultsMvar[i] <<"   U(m=" <<mCentral <<", s=" <<s <<") = " <<resultsSvar[i] <<endl;
+// 	}
+// 	for(int i=0; i<steps; ++i)
+// 	{
+// 		cout.precision(15);
+// 		double dist_m=mStep*(i+1);
+// 		double dist_s=sStep*(i+1);
+// 		cout <<"(U(m=" <<mCentral <<"+" <<dist_m <<", s=" <<sCentral <<") -  U(m=" <<mCentral <<"-" <<dist_m <<", s=" <<sCentral <<"))/"<<2*dist_m <<"  = " 
+// 		     <<(resultsMvar[steps+1+i]-resultsMvar[steps-i-1])/(2.0*dist_m) <<endl;
+// 		     
+// 		cout <<"(U(m=" <<mCentral <<", s=" <<sCentral <<"+" <<dist_s <<") -  U(m=" <<mCentral <<", s=" <<sCentral <<"-" <<dist_s <<"))/"<<2*dist_s <<"  = " 
+// 		     <<(resultsSvar[steps+1+i]-resultsSvar[steps-1-i])/(2.0*dist_s) <<endl;
+// 	}
 	
-	cout <<endl <<"Testing the gsl version of only the gradient:" <<endl;
-	gsl_vector *testGradient = gsl_vector_alloc(2);
-	double grad_dm(0.0), grad_ds(0.0);
-	CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral,sCentral, grad_dm, grad_ds);
-	CEP.computeConstrainedEffectivePotential_onlyGradient_gsl(testVector, dummyPTR, testGradient);
-	cout <<"dU/dm normal: " <<grad_dm <<"   from gsl: " <<gsl_vector_get(testGradient,0) <<endl;
-	cout <<"dU/ds normal: " <<grad_ds <<"   from gsl: " <<gsl_vector_get(testGradient,1) <<endl;
+// 	double res_U_dm(0.0), res_U_ds(0.0);
+// 	CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral,sCentral, res_U_dm, res_U_ds);
+// 	cout <<"dU/dm(m=" <<mCentral <<", s=" <<sCentral <<") = " <<res_U_dm <<"   dU/ds(m=" <<mCentral <<", s=" <<sCentral <<") = " <<res_U_ds <<endl;
+// 	
+// 	delete [] resultsMvar;
+// 	delete [] resultsSvar;
+// 	
+// 	//now use the function that computes teh function and the derivative at the same time
+// 	
+// 	double U(0.0),U_dm(0.0),U_ds(0.0);
+// 	for(int im=0; im<maxCounter; ++im)
+// 	{
+// 		m=mCentral-mStep*(steps-im);
+// 		CEP.computeConstrainedEffectivePotential_FunctionAndGradient(m,sCentral, U, U_dm, U_ds);
+// 		cout <<"m="<<m <<"  s=" <<sCentral <<"    U(m,s) = " <<U <<"   dU/dm = " <<U_dm <<"   dU/ds = " <<U_ds <<endl;
+// 		s=sCentral-sStep*(steps-im);
+// 		CEP.computeConstrainedEffectivePotential_FunctionAndGradient(mCentral,s, U, U_dm, U_ds);
+// 		cout <<"m="<<mCentral <<"  s=" <<s <<"    U(m,s) = " <<U <<"   dU/dm = " <<U_dm <<"   dU/ds = " <<U_ds <<endl;
+// 	}
+// 	
 	
-	cout <<endl <<"Testing the gsl version of function and gradient:" <<endl;
+// 	cout <<endl <<"Testing the gsl version of only the function:" <<endl;
+// 	double resultNormal=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral);
+// 	gsl_vector *testVector = gsl_vector_alloc(2);
+// 	gsl_vector_set(testVector, 0,  mCentral);
+// 	gsl_vector_set(testVector, 1,  sCentral);
+// 	void *dummyPTR;
+// 	double result_gsl=CEP.computeConstrainedEffectivePotential_onlyFunction_gsl(testVector, dummyPTR);
+// 	cout <<"Normal result: " <<resultNormal <<"   from gsl-function: " <<result_gsl <<endl;
+// 	
+// 	cout <<endl <<"Testing the gsl version of only the gradient:" <<endl;
+// 	gsl_vector *testGradient = gsl_vector_alloc(2);
+// 	double grad_dm(0.0), grad_ds(0.0);
+// 	CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral,sCentral, grad_dm, grad_ds);
+// 	CEP.computeConstrainedEffectivePotential_onlyGradient_gsl(testVector, dummyPTR, testGradient);
+// 	cout <<"dU/dm normal: " <<grad_dm <<"   from gsl: " <<gsl_vector_get(testGradient,0) <<endl;
+// 	cout <<"dU/ds normal: " <<grad_ds <<"   from gsl: " <<gsl_vector_get(testGradient,1) <<endl;
+// 	
+// 	cout <<endl <<"Testing the gsl version of function and gradient:" <<endl;
+// 	
+// 	grad_dm=0.0, grad_ds=0.0, resultNormal=0.0;
+// 	result_gsl=0;gsl_vector_set_zero(testGradient);
+// 	CEP.computeConstrainedEffectivePotential_FunctionAndGradient(mCentral,sCentral, resultNormal, grad_dm, grad_ds);
+// 	CEP.computeConstrainedEffectivePotential_FunctionAndGradient_gsl(testVector, dummyPTR, &result_gsl, testGradient);
+// 	cout <<"Normal result: " <<resultNormal <<"   from gsl-function: " <<result_gsl <<endl;
+// 	cout <<"dU/dm normal: " <<grad_dm <<"   from gsl: " <<gsl_vector_get(testGradient,0) <<endl;
+// 	cout <<"dU/ds normal: " <<grad_ds <<"   from gsl: " <<gsl_vector_get(testGradient,1) <<endl;
+// 	
+// 	
+// 	
+// 	cout <<endl <<"Testing the gsl wrapper of function:" <<endl;
+// 	grad_dm=0.0, grad_ds=0.0, resultNormal=0.0;
+// 	result_gsl=0;gsl_vector_set_zero(testGradient);
+// 	
+// 	constrainedEffectivePotential *CEP_ptr=&CEP;
+// 	cout <<"wrapper returns: " <<wrapper_computeConstrainedEffectivePotential_onlyFunction_gsl(testVector, (void *)CEP_ptr) <<endl;
+// 	
+// 	wrapper_computeConstrainedEffectivePotential_onlyGradient_gsl(testVector, CEP_ptr, testGradient);
+// 	cout <<"dU/dm from wrapper_gsl_onlyGradient: " <<gsl_vector_get(testGradient,0) <<endl;
+// 	cout <<"dU/ds from wrapper_gsl_onlyGradient: " <<gsl_vector_get(testGradient,1) <<endl;
+// 	
+// 	grad_dm=0.0, grad_ds=0.0, resultNormal=0.0;
+// 	result_gsl=0;gsl_vector_set_zero(testGradient);
+// 	
+// 	wrapper_computeConstrainedEffectivePotential_FunctionAndGradient_gsl(testVector, CEP_ptr, &result_gsl, testGradient);
+// 	cout <<"result from wrapper_gsl_functionAndGradient: " <<result_gsl <<endl;
+// 	cout <<"dU/dm from wrapper_gsl_functionAndGradient: " <<gsl_vector_get(testGradient,0) <<endl;
+// 	cout <<"dU/ds from wrapper_gsl_functionAndGradient: " <<gsl_vector_get(testGradient,1) <<endl;
+// 	
 	
-	grad_dm=0.0, grad_ds=0.0, resultNormal=0.0;
-	result_gsl=0;gsl_vector_set_zero(testGradient);
-	CEP.computeConstrainedEffectivePotential_FunctionAndGradient(mCentral,sCentral, resultNormal, grad_dm, grad_ds);
-	CEP.computeConstrainedEffectivePotential_FunctionAndGradient_gsl(testVector, dummyPTR, &result_gsl, testGradient);
-	cout <<"Normal result: " <<resultNormal <<"   from gsl-function: " <<result_gsl <<endl;
-	cout <<"dU/dm normal: " <<grad_dm <<"   from gsl: " <<gsl_vector_get(testGradient,0) <<endl;
-	cout <<"dU/ds normal: " <<grad_ds <<"   from gsl: " <<gsl_vector_get(testGradient,1) <<endl;
-	
-	
-	
-	cout <<endl <<"Testing the gsl wrapper of function:" <<endl;
-	grad_dm=0.0, grad_ds=0.0, resultNormal=0.0;
-	result_gsl=0;gsl_vector_set_zero(testGradient);
-	
-	constrainedEffectivePotential *CEP_ptr=&CEP;
-	cout <<"wrapper returns: " <<wrapper_computeConstrainedEffectivePotential_onlyFunction_gsl(testVector, (void *)CEP_ptr) <<endl;
-	
-	wrapper_computeConstrainedEffectivePotential_onlyGradient_gsl(testVector, CEP_ptr, testGradient);
-	cout <<"dU/dm from wrapper_gsl_onlyGradient: " <<gsl_vector_get(testGradient,0) <<endl;
-	cout <<"dU/ds from wrapper_gsl_onlyGradient: " <<gsl_vector_get(testGradient,1) <<endl;
-	
-	grad_dm=0.0, grad_ds=0.0, resultNormal=0.0;
-	result_gsl=0;gsl_vector_set_zero(testGradient);
-	
-	wrapper_computeConstrainedEffectivePotential_FunctionAndGradient_gsl(testVector, CEP_ptr, &result_gsl, testGradient);
-	cout <<"result from wrapper_gsl_functionAndGradient: " <<result_gsl <<endl;
-	cout <<"dU/dm from wrapper_gsl_functionAndGradient: " <<gsl_vector_get(testGradient,0) <<endl;
-	cout <<"dU/ds from wrapper_gsl_functionAndGradient: " <<gsl_vector_get(testGradient,1) <<endl;
-	*/
-	
-	
+	/*
 	
 	double toleranceForLine=0.00001;
 	double toleranceForConv=0.001;
@@ -202,6 +285,7 @@ int main(int narg,char **arg)
 	
 	double k_min=-0.5, k_max=0.2, k_step=0.001;
 	double actualKappa=k_min;
+	*/
 	/*
 	std::map< double, std::pair< double, double > > minimum_fromLast; //takes last result
 	std::map< double, std::pair< double, double > > minimum_fromMag; //starts at 2.0,0.001
@@ -311,6 +395,8 @@ int main(int narg,char **arg)
 		outputFile.close();
 	}
 	*/
+	
+	/*
 	actualKappa=-0.383;
 	CEP.set_kappa_N(actualKappa);
 	{
@@ -339,6 +425,8 @@ int main(int narg,char **arg)
 		}
 		outputFile.close();
 	}
+	*/
+	
 
 	
 
