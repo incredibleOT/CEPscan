@@ -1,0 +1,69 @@
+
+L_s                       16
+L_t                       32
+antiperiodic_L_t          0
+	
+# scan_kappa_N            1
+kappa_N                   0.35
+# kappa_N_min               -0.5
+# kappa_N_max               +0.5
+# kappa_N_step              +0.01
+
+# scan_lambda_N             1
+lambda_N                    0.3
+# lambda_N_min                0.0
+# lambda_N_max                0.5
+# lambda_N_step               0.01
+
+# 175/246=0.711382114    500/246=2.032520325
+# scan_yukawa_N           1
+yukawa_N                  0.75
+# yukawa_N_min            0.5
+# yukawa_N_max            3.0
+# yukawa_N_step           0.1
+
+#if set , the yukawa coupling will be multiplied by sqrt(2 kappa), or lambda_N by (4 kappa^2) 
+interpret_yukawa_as_continuum    0
+interpret_lambda_as_continuum    0
+
+#whether or not the first order in lambda should be included(default 1)
+include_bosonic_loop       1
+
+# default: N_f=1, rho=1, r=0.5
+# N_f                       1
+# rho                       1.0
+# r                         0.5
+
+# 1 when tolerance_for_convergence is reached,   2 when iteration stopped, since it cannot improve)
+iteration_stopping_criteria     2
+
+tolerance_for_line_minimization    0.0001
+tolerance_for_convergence         0.0001
+max_numer_of_iterations            100
+	
+	
+#1 conjugate_fr, 2 conjugate_pr, 3 vector_bfgs2, 4 vector_bfgs, 5 steepest_descent
+minimization_algorithm         3
+	
+# 1 use given starting point, 2 use given starting point first and during scan last result
+# 3 perform a scan in {m_0:m_1:m_s , s_0} and {m_0, s_0:s_1:s_s}, 
+# determin the lowest point and start from there - initial stepsize will be the minimum of (s_0/2,m_0/2)
+# 4perform a 2-d scan in {m_0:m_1:m_s ,s_0:s_1:s_s} 
+# determin the lowest point and start from there - initial stepsize will be the minimum of (s_0/2,m_0/2))
+starting_procedure           3
+
+# initial_step_size             0.001
+
+# start_m                       1.0
+ minimal_m                    0.05 
+ maximal_m                    3.0 
+ step_m                       0.05
+
+# start_s                      1.0
+ minimal_s                  0.05
+ maximal_s                  3.0
+ step_s                     0.05
+
+#may use: [Ls]->Lxx [Lt]->Txx [k]->k_xxxx [l]->l_xxxx [y]->y_xxxx for the scanables: e.g. k_xx_yy with max and min)
+outputfile                  output/output_[Ls][Lt]_[y]_[l]_[k].txt
+
