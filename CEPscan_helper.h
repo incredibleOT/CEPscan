@@ -29,6 +29,7 @@ namespace CEPscan_helper
 	{
 		double kappa_N;
 		double lambda_N;
+		double lambda_6_N;
 		double yukawa_N;
 		double magnetization;
 		double staggered_magnetization;

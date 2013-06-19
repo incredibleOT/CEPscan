@@ -14,7 +14,7 @@ cosSquaredOfPmuHalf_L0(NULL),cosSquaredOfPmuHalf_L1(NULL),cosSquaredOfPmuHalf_L2
 cosOfPmu_L0(NULL), cosOfPmu_L1(NULL), cosOfPmu_L2(NULL), cosOfPmu_L3(NULL),
 numberOfDistingtMomenta(-1), absNuP(NULL), absNuVarP(NULL), absGammaP(NULL), absGammaVarP(NULL),factorOfMomentum(NULL),
 numberOfDistingtMomenta_bosonic(-1), sumOfCosOfPmu(NULL), factorOfMomentum_bosonic(NULL),
-kappa_N(-1.0), lambda_N(-1.0), yukawa_N(-1.0),
+kappa_N(0.0), lambda_N(0.0), lambda_6_N(0.0), yukawa_N(0.0),
 N_f(1), rho(1.0), one_ov_twoRho(0.5/rho), r(0.5),
 bosonicLoop(-1.0), bosonicLoopSet(false), useBosonicLoop(true),
 toleranceForLineMinimization(-1.0), toleranceForConvergence(-1.0), initialStepSize(-1.0), maxNumerOfIterations(100), minimizationAlgorithm(-1), minimizerInitialized(false), iteratorStoppedFlag(false),
@@ -181,6 +181,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					}
 					{
 						int l2=l1;
+						l2=l2; 
 						//p,q,q, 24
 						++counter;
 						l2=l0;
@@ -198,6 +199,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					int l1=l0;
 					{
 						int l2=l1;
+						l2=l2;//no compiler warning
 						//p,p,p, 8
 						++counter;
 						l2=Lhalf;
@@ -210,6 +212,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					l1=Lhalf;
 					{
 						int l2=Lhalf;
+						l2=l2;//no compiler warning
 						//p,L/2,L/2, 6
 						++counter;
 						l2=0;
@@ -229,8 +232,10 @@ void constrainedEffectivePotential::fillEigenvalues()
 				int l0=Lhalf;
 				{
 					int l1=Lhalf;
+					l1=l1;//no compiler warning
 					{
 						int l2=Lhalf;
+						l2=l2;//no compiler warning
 						//L/2,L/2,L/2, 1
 						++counter;
 						l2=0;
@@ -246,6 +251,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					}
 				}
 				l0=0;
+				l0=l0;
 				{
 					int l1=0;
 					l1=l1; //no compiler warning
@@ -272,6 +278,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					}
 					{
 						int l2=l1;
+						l2=l2;//no compiler warning
 						//p,q,q, 24
 						++counter;
 						l2=l0;
@@ -287,8 +294,10 @@ void constrainedEffectivePotential::fillEigenvalues()
 				}
 				{
 					int l1=l0;
+					l1=l1;//no compiler warning
 					{
 						int l2=l1;
+						l2=l2;//no compiler warning
 						//p,p,p, 8
 						++counter;
 						l2=Lhalf;
@@ -301,6 +310,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					l1=Lhalf;
 					{
 						int l2=Lhalf;
+						l2=l2;//no compiler warning
 						//p,L/2,L/2, 6
 						++counter;
 						l2=0;
@@ -310,6 +320,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					l1=0;
 					{
 						int l2=0;
+						l2=l2;//no compiler warning
 						l2=l2; //no compiler warning
 						//0,0,p  6
 						++counter;
@@ -318,10 +329,13 @@ void constrainedEffectivePotential::fillEigenvalues()
 			}
 			{
 				int l0=Lhalf;
+				l0=l0;//no compiler warning
 				{
 					int l1=Lhalf;
+					l1=l1;//no compiler warning
 					{
 						int l2=Lhalf;
+						l2=l2;//no compiler warning
 						//L/2,L/2,L/2, 1
 						++counter;
 						l2=0;
@@ -775,6 +789,7 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 					}
 					{
 						int l2=l1;
+						l2=l2;//no compiler warning
 						//p,q,q, 24
 						++counter;
 						l2=l0;
@@ -792,6 +807,7 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 					int l1=l0;
 					{
 						int l2=l1;
+						l2=l2;//no compiler warning
 						//p,p,p, 8
 						++counter;
 						l2=Lhalf;
@@ -804,6 +820,7 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 					l1=Lhalf;
 					{
 						int l2=Lhalf;
+						l2=l2;//no compiler warning
 						//p,L/2,L/2, 6
 						++counter;
 						l2=0;
@@ -821,10 +838,13 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 			}
 			{
 				int l0=Lhalf;
+				l0=l0;//no compiler warning
 				{
 					int l1=Lhalf;
+					l1=l1;//no compiler warning
 					{
 						int l2=Lhalf;
+						l2=l2;//no compiler warning
 						//L/2,L/2,L/2, 1
 						++counter;
 						l2=0;
@@ -866,6 +886,7 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 					}
 					{
 						int l2=l1;
+						l2=l2;//no compiler warning
 						//p,q,q, 24
 						++counter;
 						l2=l0;
@@ -883,6 +904,7 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 					int l1=l0;
 					{
 						int l2=l1;
+						l2=l2;//no compiler warning
 						//p,p,p, 8
 						++counter;
 						l2=Lhalf;
@@ -895,6 +917,7 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 					l1=Lhalf;
 					{
 						int l2=Lhalf;
+						l2=l2;//no compiler warning
 						//p,L/2,L/2, 6
 						++counter;
 						l2=0;
@@ -904,6 +927,7 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 					l1=0;
 					{
 						int l2=0;
+						l2=l2;//no compiler warning
 						l2=l2; //no compiler warning
 						//0,0,p  6
 						++counter;
@@ -912,10 +936,13 @@ void constrainedEffectivePotential::fillBosonicLoopValues()
 			}
 			{
 				int l0=Lhalf;
+				l0=l0;//no compiler warning
 				{
 					int l1=Lhalf;
+					l1=l1;//no compiler warning
 					{
 						int l2=Lhalf;
+						l2=l2;//no compiler warning
 						//L/2,L/2,L/2, 1
 						if(l3!=LT_half){++counter; }
 						l2=0;
@@ -1220,11 +1247,22 @@ void constrainedEffectivePotential::set_lambda_N(double new_l)
 		bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();
 	}
 }
+
+void constrainedEffectivePotential::set_lambda_6_N(double new_l_6){ lambda_6_N=new_l_6; reInitializeMinimizer(); }
 void constrainedEffectivePotential::set_yukawa_N(double new_y){ yukawa_N=new_y; reInitializeMinimizer();}
 void constrainedEffectivePotential::set_kappa_lambda_yukawa_N(double new_k, double new_l, double new_y)
 {
 	bool change=(new_l!=lambda_N || new_k!=kappa_N);
 	kappa_N=new_k; lambda_N=new_l; yukawa_N=new_y; reInitializeMinimizer();
+	if(bosonicLoopSet && useBosonicLoop && change)
+	{
+		bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();
+	}
+}
+void constrainedEffectivePotential::set_kappa_lambda_lambda_6_yukawa_N(double new_k, double new_l, double new_l_6, double new_y)
+{
+	bool change=(new_l!=lambda_N || new_k!=kappa_N);
+	kappa_N=new_k; lambda_N=new_l; lambda_6_N=new_l_6; yukawa_N=new_y; reInitializeMinimizer();
 	if(bosonicLoopSet && useBosonicLoop && change)
 	{
 		bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();
@@ -1281,6 +1319,7 @@ void constrainedEffectivePotential::set_minimizationAlgorithm(int new_alg)
 
 double constrainedEffectivePotential::get_kappa_N(){ return kappa_N; }
 double constrainedEffectivePotential::get_lambda_N(){ return lambda_N; }
+double constrainedEffectivePotential::get_lambda_6_N(){ return lambda_6_N; }
 double constrainedEffectivePotential::get_yukawa_N(){ return yukawa_N; }
 
 int constrainedEffectivePotential::get_N_f(){ return N_f; }

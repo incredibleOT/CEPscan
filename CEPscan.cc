@@ -87,7 +87,7 @@ int main(int narg,char **arg)
 	CEP.set_minimizationAlgorithm(parametersInt["minimization_algorithm"]);
 	
 	//now prepare the scanning lists
-	std::set< double > kappa_N_values, lambda_N_values, yukawa_N_values; //for aprameters
+	std::set< double > kappa_N_values, lambda_N_values, lambda_6_N_values, yukawa_N_values; //for parameters
 	std::set< double > testValues_magnetization, testValues_staggeredMagnetization; //for scanning of startingpoint
 	
 	//kappa_N
@@ -102,6 +102,12 @@ int main(int narg,char **arg)
 		CEPscan_helper::fillSetWithRange( parametersDouble["lambda_N_min"], parametersDouble["lambda_N_max"], parametersDouble["lambda_N_step"], lambda_N_values );
 	}
 	else{ lambda_N_values.insert(parametersDouble["lambda_N"]); }
+	//lambda_6_N
+	if(parametersIsSet["scan_lambda_6_N"] && parametersInt["scan_lambda_6_N"] )
+	{
+		CEPscan_helper::fillSetWithRange( parametersDouble["lambda_6_N_min"], parametersDouble["lambda_6_N_max"], parametersDouble["lambda_6_N_step"], lambda_6_N_values );
+	}
+	else{ lambda_6_N_values.insert(parametersDouble["lambda_6_N"]); }
 	//yukawa_N
 	if(parametersIsSet["scan_yukawa_N"] && parametersInt["scan_yukawa_N"] )
 	{
@@ -113,7 +119,9 @@ int main(int narg,char **arg)
 	//set starting values
 	CEP.set_kappa_N(*kappa_N_values.begin());
 	CEP.set_lambda_N(*lambda_N_values.begin());
+	CEP.set_lambda_6_N(*lambda_6_N_values.begin());
 	CEP.set_yukawa_N(*yukawa_N_values.begin());
+	
 	
 	if(parametersInt["starting_procedure"]==1 || parametersInt["starting_procedure"]==2)
 	{
@@ -129,81 +137,88 @@ int main(int narg,char **arg)
 	
 	typedef CEPscan_helper::resultForOutput resultType;
 	std::vector< resultType > results;
-	
+	cout <<"start scanning" <<endl;
 	//now iterate
 	for(std::set< double >::const_iterator kappa_N=kappa_N_values.begin(); kappa_N!=kappa_N_values.end(); ++kappa_N)
 	{
+// 		cout <<"kappa=" <<*kappa_N <<endl;
 		double lambdaFactor=(parametersInt["interpret_lambda_as_continuum"])?( 4.0 * (*kappa_N) * (*kappa_N) ) : 1.0;
+		double lambda_6_Factor=(parametersInt["interpret_lambda_6_as_continuum"])?( 8.0 * (*kappa_N) * (*kappa_N) * (*kappa_N) ) : 1.0;
 		double yukawaFactor=(parametersInt["interpret_yukawa_as_continuum"])?( sqrt(2.0* (*kappa_N)) ): 1.0;
 		for(std::set< double >::const_iterator lambda_N=lambda_N_values.begin(); lambda_N!=lambda_N_values.end(); ++lambda_N)
 		{
-			for(std::set< double >::const_iterator yukawa_N=yukawa_N_values.begin(); yukawa_N!=yukawa_N_values.end(); ++yukawa_N)
+// 			cout <<"lambda=" <<*lambda_N <<endl;
+			for(std::set< double >::const_iterator lambda_6_N=lambda_6_N_values.begin(); lambda_6_N!=lambda_6_N_values.end(); ++lambda_6_N)
 			{
-				CEP.set_kappa_lambda_yukawa_N( *kappa_N, *lambda_N * lambdaFactor, *yukawa_N * yukawaFactor);
-					
-				cout <<"kappa_N=" <<CEP.get_kappa_N() <<"  lambda_N=" <<CEP.get_lambda_N() <<"  yukawa_N=" <<CEP.get_yukawa_N(); //<<endl
-				double start_m(0.0), start_s(0.0);
-				int nIter;
-				switch( parametersInt["starting_procedure"] )
+				for(std::set< double >::const_iterator yukawa_N=yukawa_N_values.begin(); yukawa_N!=yukawa_N_values.end(); ++yukawa_N)
 				{
-					case 1:
-					CEP.reInitializeMinimizer(parametersDouble["start_m"] , parametersDouble["start_s"]); 
-					break;
-					case 2: break;
-					case 3: 
-					CEPscan_helper::findStartByTwo_1d_Scans(testValues_magnetization, testValues_staggeredMagnetization, CEP, start_m, start_s);
-					CEP.reInitializeMinimizer(start_m, start_s);
-					break;
-					case 4:
-					CEPscan_helper::findStartByOne_2d_Scan(testValues_magnetization, testValues_staggeredMagnetization, CEP, start_m, start_s);
-					CEP.reInitializeMinimizer(start_m, start_s);
-					break;
-					default: 
-					cerr <<"Error, no starting_procedure=" <<parametersInt["starting_procedure"] <<endl;
-					exit(EXIT_FAILURE);
-				}
-				CEP.getActualMinimizerLocation(start_m, start_s);
-				cout <<"  start at:  m=" <<start_m <<"  s=" <<start_s;// <<endl;
-				switch( parametersInt["iteration_stopping_criteria"] )
-				{
-					case 1: 
-					nIter=CEP.itarateUntilToleranceReached(parametersDouble["tolerance_for_convergence"]);
-					break;
-					case 2:
-					nIter=CEP.iterateUntilIterationStopps();
-					break;
-					default:
-					cerr <<"Error, no iteration_stopping_criteria=" <<parametersInt["iteration_stopping_criteria"] <<endl;
-					exit(EXIT_FAILURE);
-				}
-				if(nIter==0)
-				{
-					cout <<endl <<"Minimization did not converge in " <<CEP.get_maxNumerOfIterations() <<" steps" <<endl;
-				}
-				else
-				{
+					CEP.set_kappa_lambda_lambda_6_yukawa_N( *kappa_N, *lambda_N * lambdaFactor, *lambda_6_N * lambda_6_Factor, *yukawa_N * yukawaFactor);
+						
+					cout <<"kappa_N=" <<CEP.get_kappa_N() <<"  lambda_N=" <<CEP.get_lambda_N() <<"  lambda_6_N=" <<CEP.get_lambda_6_N() <<"  yukawa_N=" <<CEP.get_yukawa_N(); //<<endl
+					double start_m(0.0), start_s(0.0);
+					int nIter;
+					switch( parametersInt["starting_procedure"] )
+					{
+						case 1:
+						CEP.reInitializeMinimizer(parametersDouble["start_m"] , parametersDouble["start_s"]); 
+						break;
+						case 2: break;
+						case 3: 
+						CEPscan_helper::findStartByTwo_1d_Scans(testValues_magnetization, testValues_staggeredMagnetization, CEP, start_m, start_s);
+						CEP.reInitializeMinimizer(start_m, start_s);
+						break;
+						case 4:
+						CEPscan_helper::findStartByOne_2d_Scan(testValues_magnetization, testValues_staggeredMagnetization, CEP, start_m, start_s);
+						CEP.reInitializeMinimizer(start_m, start_s);
+						break;
+						default: 
+						cerr <<"Error, no starting_procedure=" <<parametersInt["starting_procedure"] <<endl;
+						exit(EXIT_FAILURE);
+					}
 					CEP.getActualMinimizerLocation(start_m, start_s);
-					cout <<"  Minimum: U(m=" <<start_m <<"  s=" <<start_s <<")=" <<CEP.getActualMinimizerValue();
-					cout <<"  (" <<nIter <<" iter.)" <<endl;
-					resultType dummyResult;
-					dummyResult.kappa_N=CEP.get_kappa_N();
-					dummyResult.lambda_N=CEP.get_lambda_N();
-					dummyResult.yukawa_N=CEP.get_yukawa_N();
-					dummyResult.magnetization=std::abs(start_m);
-					dummyResult.staggered_magnetization=std::abs(start_s);
-					dummyResult.potential=CEP.getActualMinimizerValue();
-					CEP.getActualSecondDerivative(dummyResult.d2U_ov_dmdm, dummyResult.d2U_ov_dsds, dummyResult.d2U_ov_dmds);
-					results.push_back(dummyResult);
-				}
-					
-			}//yukawa
+					cout <<"  start at:  m=" <<start_m <<"  s=" <<start_s;// <<endl;
+					switch( parametersInt["iteration_stopping_criteria"] )
+					{
+						case 1: 
+						nIter=CEP.itarateUntilToleranceReached(parametersDouble["tolerance_for_convergence"]);
+						break;
+						case 2:
+						nIter=CEP.iterateUntilIterationStopps();
+						break;
+						default:
+						cerr <<"Error, no iteration_stopping_criteria=" <<parametersInt["iteration_stopping_criteria"] <<endl;
+						exit(EXIT_FAILURE);
+					}
+					if(nIter==0)
+					{
+						cout <<endl <<"Minimization did not converge in " <<CEP.get_maxNumerOfIterations() <<" steps" <<endl;
+					}
+					else
+					{
+						CEP.getActualMinimizerLocation(start_m, start_s);
+						cout <<"  Minimum: U(m=" <<start_m <<"  s=" <<start_s <<")=" <<CEP.getActualMinimizerValue();
+						cout <<"  (" <<nIter <<" iter.)" <<endl;
+						resultType dummyResult;
+						dummyResult.kappa_N=CEP.get_kappa_N();
+						dummyResult.lambda_N=CEP.get_lambda_N();
+						dummyResult.lambda_6_N=CEP.get_lambda_6_N();
+						dummyResult.yukawa_N=CEP.get_yukawa_N();
+						dummyResult.magnetization=std::abs(start_m);
+						dummyResult.staggered_magnetization=std::abs(start_s);
+						dummyResult.potential=CEP.getActualMinimizerValue();
+						CEP.getActualSecondDerivative(dummyResult.d2U_ov_dmdm, dummyResult.d2U_ov_dsds, dummyResult.d2U_ov_dmds);
+						results.push_back(dummyResult);
+					}
+						
+				}//yukawa
+			}//lambda_6
 		}//lambda
 	}//kappa
 	
 	
 	//output to cout
 	{
-		cout <<"Results (kappa_N,   lambda_N,   yukawa_N,   mag,   stag.mag,   pot:" <<endl;
+		cout <<"Results (kappa_N,   lambda_N,   lambda_6_N,   yukawa_N,   mag,   stag.mag,   pot:" <<endl;
 		CEPscan_helper::printResultsVectorToStream( results, cout );
 	}
 	//
@@ -242,6 +257,15 @@ int main(int narg,char **arg)
 				if(parametersInt["scan_lambda_N"]){ss <<parametersDouble["lambda_N_min"] <<"_"<<parametersDouble["lambda_N_max"]; }
 				else {ss <<parametersDouble["lambda_N"]; }
 				outputFileName.replace(outputFileName.find("[l]"),3, ss.str() );
+			}
+			if( outputFileName.find("[l6]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				ss <<"l6_";
+				ss.precision(7);
+				if(parametersInt["scan_lambda_6_N"]){ss <<parametersDouble["lambda_6_N_min"] <<"_"<<parametersDouble["lambda_6_N_max"]; }
+				else {ss <<parametersDouble["lambda_6_N"]; }
+				outputFileName.replace(outputFileName.find("[l6]"),4, ss.str() );
 			}
 			if( outputFileName.find("[y]")!=std::string::npos )
 			{
@@ -288,7 +312,7 @@ int main(int narg,char **arg)
 		output <<"# parameters set:" <<endl;
 		CEPscan_helper::streamSetParameterMaps( parametersDouble, parametersInt, parametersString, parametersIsSet, outputFile, "#");
 		output <<"# Output format is:" <<endl;
-		output <<"# kappa_N   lambda_N   yukawa_N   Magnetization   stageredMagnetization   U_min   d2U_ov_dmdm   d2U_ov_dsds   d2U_ov_dmds" <<endl;
+		output <<"# kappa_N   lambda_N  lambda_6_N  yukawa_N   Magnetization   stageredMagnetization   U_min   d2U_ov_dmdm   d2U_ov_dsds   d2U_ov_dmds" <<endl;
 		CEPscan_helper::printResultsVectorToStream( results, output );
 		outputFile.close();
 	}

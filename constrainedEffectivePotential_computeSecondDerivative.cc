@@ -3,13 +3,13 @@
 
 void constrainedEffectivePotential::computeConstrainedEffectivePotential_secondDerivatives(const double magnetization, const double staggeredMagnetization, double &d2U_ov_dmdm, double &d2U_ov_dsds, double &d2U_ov_dmds)
 {
-	//U= -8*kappa*(m^2-s^2) + m^2 + s^2 + lambda*( m^4 + s^4 + 6*m^2s^2 - 2*(m^2+s^2)) + U_f(m,s)
-	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m)
-	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s)
+	//U= -8*kappa*(m^2-s^2) + m^2 + s^2 + lambda*( m^4 + s^4 + 6*m^2s^2 - 2*(m^2+s^2)) + lambda_6(m^6 + s^6 + 15*m^4*s^2 + 15*m^2*s^4) + U_f(m,s)
+	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m) + lambda_6*(6*m^5 + 60*m^3*s^2 + 30*m*s^4)
+	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s) + lambda_6*(6*s^5 + 30*m^4*s + 60*m^2*s^3)
 	//
-	//d^2U/dm^2 = d^2U_f/d_m^2 - 16 kappa + 2 + lambda*(12*m^2 + 12*s^2 - 4)
-	//d^2U/ds^2 = d^2U_f/d_m^2 + 16 kappa + 2 + lambda*(12*s^2 + 12*m^2 - 4)
-	//d^2U/dmds = d^2U_f/dmds  + lambda*(24*m*s)
+	//d^2U/dm^2 = d^2U_f/d_m^2 - 16 kappa + 2 + lambda*(12*m^2 + 12*s^2 - 4) + lambda_6*(30*m^4 + 180*m^2*s^2 + 30*s^4)
+	//d^2U/ds^2 = d^2U_f/d_m^2 + 16 kappa + 2 + lambda*(12*s^2 + 12*m^2 - 4) + lambda_6*(30*s^4 + 180*m^2*s^2 + 30*m^4)
+	//d^2U/dmds = d^2U_f/dmds  + lambda*(24*m*s) + lambda_6*(120*m^3*s + 120*m*s^3)
 	//
 	//NOTE added a term coming from the boson loop:
 	//U+=16*(m^2+s^2)*lambda_N*N_f^{-1}*P_B
@@ -24,16 +24,19 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_secondD
 	if(useBosonicLoop && !bosonicLoopSet){ bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();}
 	
 	compute_fermionicContribution_secondDerivatives_FromStoredEigenvalues(magnetization, staggeredMagnetization, d2U_ov_dmdm, d2U_ov_dsds, d2U_ov_dmds);
-	
+	double mSq(magnetization*magnetization), sSq(staggeredMagnetization*staggeredMagnetization);
 	d2U_ov_dmdm+= -16.0*kappa_N + 2.0;
-	d2U_ov_dmdm+= lambda_N*( 12.0*(magnetization*magnetization + staggeredMagnetization*staggeredMagnetization) - 4.0 );
+	d2U_ov_dmdm+= lambda_N*( 12.0*(mSq + sSq) - 4.0 );
+	d2U_ov_dmdm+= lambda_6_N*( 30.0*mSq*mSq + 180.0*mSq*sSq + 30.0*sSq*sSq);
 	if(useBosonicLoop){ d2U_ov_dmdm += 32.0*lambda_N*bosonicLoop/static_cast< double >(N_f); }
 	
 	d2U_ov_dsds+= +16.0*kappa_N + 2.0;
-	d2U_ov_dsds+= lambda_N*( 12.0*(magnetization*magnetization + staggeredMagnetization*staggeredMagnetization) - 4.0 );
+	d2U_ov_dsds+= lambda_N*( 12.0*(mSq + sSq) - 4.0 );
+	d2U_ov_dsds+= lambda_6_N*( 30.0*sSq*sSq + 180.0*mSq*sSq + 30.0*mSq*mSq);
 	if(useBosonicLoop){ d2U_ov_dsds += 32.0*lambda_N*bosonicLoop/static_cast< double >(N_f); }
 	
 	d2U_ov_dmds+= 24.0*lambda_N*magnetization*staggeredMagnetization;
+	d2U_ov_dmds+= lambda_6_N*(120.0*mSq*magnetization*staggeredMagnetization + 120.0*magnetization*sSq*staggeredMagnetization);
 }
 
 
@@ -69,9 +72,9 @@ void constrainedEffectivePotential::compute_fermionicContribution_secondDerivati
 	// (gg) = |gamma(p)|*|gamma(varP)|
 	//d^2U_f/dmdm = -4*y^2/V * sum[ ( 2(gg)a+b^2 + 2*y^2*m^2*( 2(gg)^2 - (2(gg)a + b^2)^2/A ) )/A ]
 	//
-	//d^2U_f/dsds = 8*y^2/V * sum[ (gg)/A * ( a + 2*y^2*s*(gg)*(-1 + 2*a^2/A))]
+	//d^2U_f/dsds = 8*y^2/V * sum[ (gg)/A * ( a + 2*y^2*s^2*(gg)*(-1 + 2*a^2/A))]
 	//
-	//d^2U/dmds = 16y^4*m*s/V * sum[ (gg)/A * ( gg - a*(2(gg)a + b^2)/A
+	//d^2U/dmds = 16y^4*m*s/V * sum[ (gg)/A * ( gg - a*(2(gg)a + b^2)/A)]
 	if(yukawa_N < 0.0)
 	{
 		std::cerr <<"Error, no yukawa coupling set in constrainedEffectivePotential::compute_fermionicContribution_secondDerivatives_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization, double &d2Uf_ov_dmdm, double &d2Uf_ov_dsds, double &d2Uf_ov_dmds)" <<std::endl;

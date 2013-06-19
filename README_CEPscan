@@ -1,16 +1,17 @@
 The program CEPscan minimizes the constrained effective potential (CEP)
 wrt the magnetization and the staggered magnetization (according to fomrula 4.35 in philipp's thesis).
+In addition a term corresponding to the inclusion of a lambda_6*(phi^dagger phi)^3 is included
 
 It works with an input file (variable value pairs)
 
-The program can scan in kappa_N, lambda_N and y_n
+The program can scan in kappa_N, lambda_N, lambda_6_N and y_n
 
 The following things can be specified:
 
  - L_s,L_t (obligatory)
  - antiperiodic_L_t (whether or not antiperiodic bc in time obligatory)
  
- for kappa_n, lambda_n and yukawa_n (xxx) there are:
+ for kappa_n, lambda_n, lambda_6_n and yukawa_n (xxx) there are:
  
  - scan_xxx (0 no, positive yes - if missing, no scanning)
  - xxx  (if scan_xxx==0 , determines the value for xxx obligatory, ignored elsewise)
@@ -20,7 +21,8 @@ The following things can be specified:
 
  - interpret_yukawa_as_continuum (if set, the yukawa coupling will be multiplied by sqrt(2 kappa))  
  - interpret_lambda_as_continuum (if set, lambda_N will be multiplied by (4 kappa^2) )
-
+ - interpret_lambda_6_as_continuum (if set, lambda_6_N will be multiplied by (8 kappa^3) )
+ 
  - include_bosonic_loop       (whether or not the first order in lambda should be included, obligatory)
 
  - N_f   default=1 

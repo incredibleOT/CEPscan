@@ -36,8 +36,9 @@ class constrainedEffectivePotential
 	double *sumOfCosOfPmu, *factorOfMomentum_bosonic;
 	
 	double kappa_N; //==kappa
-	double lambda_N; //==lambda * N_f
-	double yukawa_N; //== Y_N= Y*\sqrt(N_f)
+	double lambda_N; //==\hat lambda * N_f
+	double lambda_6_N; //==\hat lambda_& * N_f^2
+	double yukawa_N; //== Y_N= \hat Y*\sqrt(N_f)
 	
 	int N_f;
 	double rho;
@@ -78,8 +79,10 @@ class constrainedEffectivePotential
 	//setting values
 	void set_kappa_N(double new_k);
 	void set_lambda_N(double new_l);
+	void set_lambda_6_N(double new_l_6);
 	void set_yukawa_N(double new_y);
 	void set_kappa_lambda_yukawa_N(double new_k, double new_l, double new_y);
+	void set_kappa_lambda_lambda_6_yukawa_N(double new_k, double new_l, double new_l_6, double new_y);
 	
 	void set_N_f(int N);
 	void set_rho(double new_rho);
@@ -95,6 +98,7 @@ class constrainedEffectivePotential
 	
 	double get_kappa_N();
 	double get_lambda_N();
+	double get_lambda_6_N();
 	double get_yukawa_N();
 	
 	int get_N_f();

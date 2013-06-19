@@ -15,6 +15,12 @@ lambda_N                    0.3
 # lambda_N_max                0.5
 # lambda_N_step               0.01
 
+# scan_lambda_6_N             1
+lambda_6_N                    0.3
+# lambda_6_N_min                0.0
+# lambda_6_N_max                0.5
+# lambda_6_N_step               0.01
+
 # 175/246=0.711382114    500/246=2.032520325
 # scan_yukawa_N           1
 yukawa_N                  0.75
@@ -22,12 +28,13 @@ yukawa_N                  0.75
 # yukawa_N_max            3.0
 # yukawa_N_step           0.1
 
-#if set , the yukawa coupling will be multiplied by sqrt(2 kappa), or lambda_N by (4 kappa^2) 
+#if set , the yukawa coupling will be multiplied by sqrt(2 kappa), or lambda_N by (4 kappa^2) , or lambda_6_N by (8 kappa^3)
 interpret_yukawa_as_continuum    0
 interpret_lambda_as_continuum    0
+interpret_lambda_6_as_continuum  0
 
 #whether or not the first order in lambda should be included(default 1)
-include_bosonic_loop       1
+include_bosonic_loop       0
 
 # default: N_f=1, rho=1, r=0.5
 # N_f                       1
@@ -64,6 +71,6 @@ starting_procedure           3
  maximal_s                  3.0
  step_s                     0.05
 
-#may use: [Ls]->Lxx [Lt]->Txx [k]->k_xxxx [l]->l_xxxx [y]->y_xxxx for the scanables: e.g. k_xx_yy with max and min)
-outputfile                  output/output_[Ls][Lt]_[y]_[l]_[k].txt
+#may use: [Ls]->Lxx [Lt]->Txx [k]->k_xxxx [l]->l_xxxx [l6]->l6_xxxx [y]->y_xxxx for the scanables: e.g. k_xx_yy with max and min)
+outputfile                  output/output_[Ls][Lt]_[y]_[l]_[l6]_[k].txt
 

@@ -30,13 +30,15 @@ int main(int narg,char **arg)
 	double y=1.0;
 	
 	double kappa=+0.00;
-	double lambda=0.0;
+	double lambda=0.2;
+	double lambda_6=0.3;
 	
 	constrainedEffectivePotential CEP(L0,L1,L2,L3,antiL3);
 	cout <<"constrainedEffectivePotential initialized" <<endl;
 	CEP.set_yukawa_N(y);
 	CEP.set_kappa_N(kappa);
 	CEP.set_lambda_N(lambda);
+	CEP.set_lambda_6_N(lambda_6);
 // 	CEP.set_useBosonicLoop(false);
 	
 	
@@ -57,14 +59,17 @@ int main(int narg,char **arg)
 		cout.precision(15);
 		double mCentral(0.3), sCentral(0.1);
 		double eps=0.00001;
-		double result(0.0), dUdm(0.0), dUds(0.0), dummy(0.0),dUdm2(0.0), dUds2(0.0);
+		double result(0.0), dUdm(0.0), dUds(0.0), dummy(0.0);
 		double dUdmdm(0.0), dUdsds(0.0), dUdmds(0.0);
 		double eps1(0.00001), eps2(0.000001), eps3(0.0000001);
 		double dUdmdm1(0.0), dUdsds1(0.0), dUdmds1(0.0);
 		double dUdmdm2(0.0), dUdsds2(0.0), dUdmds2(0.0);
 		double dUdmdm3(0.0), dUdsds3(0.0), dUdmds3(0.0);
 		
-		/*
+		double dUdm1(0.0), dUds1(0.0);
+		double dUdm2(0.0), dUds2(0.0);
+		double dUdm3(0.0), dUds3(0.0);
+	
 		cout <<"From function only:" <<endl;
 		result=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral);
 		cout <<"U = " << result <<endl;
@@ -83,7 +88,54 @@ int main(int narg,char **arg)
 		cout <<"U = " << result <<endl;
 		cout <<"dU/dm= " <<dUdm <<endl;
 		cout <<"dU/ds= " <<dUds <<endl;
-		*/
+		
+		
+		cout <<endl <<"First derivatives from the function" <<endl;
+		
+		
+		result=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral+eps1,sCentral);
+		dummy=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral-eps1,sCentral);
+		dUdm1=0.5/eps1*(result-dummy);
+		result=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral+eps1);
+		dummy=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral-eps1);
+		dUds1=0.5/eps1*(result-dummy);
+		
+		result=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral+eps2,sCentral);
+		dummy=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral-eps2,sCentral);
+		dUdm2=0.5/eps2*(result-dummy);
+		result=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral+eps2);
+		dummy=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral-eps2);
+		dUds2=0.5/eps2*(result-dummy);
+		
+		result=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral+eps3,sCentral);
+		dummy=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral-eps3,sCentral);
+		dUdm3=0.5/eps3*(result-dummy);
+		result=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral+eps3);
+		dummy=CEP.computeConstrainedEffectivePotential_onlyFunction(mCentral,sCentral-eps3);
+		dUds3=0.5/eps3*(result-dummy);
+		
+		cout <<"eps=" <<eps1 <<"   dU/dm=" <<dUdm1 <<"   dU/ds=" <<dUds1 <<endl;
+		cout <<"eps=" <<eps2 <<"   dU/dm=" <<dUdm2 <<"   dU/ds=" <<dUds2 <<endl;
+		cout <<"eps=" <<eps3 <<"   dU/dm=" <<dUdm3 <<"   dU/ds=" <<dUds3 <<endl;
+		
+		
+		cout <<endl <<"First derivatives from the gradient" <<endl;
+		CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral,sCentral,dUdm,dUds);
+		cout <<"dU/dm=" <<dUdm <<"   dU/ds=" <<dUds <<endl;
+		
+		cout <<endl <<"relative difference" <<endl;
+		
+		cout <<"eps=" <<eps1 <<"   dU/dm:" <<0.5*(dUdm1-dUdm)/(dUdm1+dUdm);
+		cout <<"   dU/ds:" <<0.5*(dUds1-dUds)/(dUds1+dUds) <<endl;
+		
+		cout <<"eps=" <<eps2 <<"   dU/dm:" <<0.5*(dUdm2-dUdm)/(dUdm2+dUdm);
+		cout <<"   dU/ds:" <<0.5*(dUds2-dUds)/(dUds2+dUds) <<endl;
+		
+		cout <<"eps=" <<eps3 <<"   dU/dm:" <<0.5*(dUdm3-dUdm)/(dUdm3+dUdm);
+		cout <<"   dU/ds:" <<0.5*(dUds3-dUds)/(dUds3+dUds) <<endl;
+		
+	
+		
 		
 		
 		cout <<endl <<"Second derivatives from the gradient" <<endl;

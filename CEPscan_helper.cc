@@ -21,6 +21,12 @@ void CEPscan_helper::prepareParameterMaps( std::map< std::string, double > &para
 	paraD["lambda_N_max"] = 0.0;
 	paraD["lambda_N_step"] = 0.0;
 	
+	paraI["scan_lambda_6_N"]=0;
+	paraD["lambda_6_N"] = 0.0;
+	paraD["lambda_6_N_min"] = 0.0;
+	paraD["lambda_6_N_max"] = 0.0;
+	paraD["lambda_6_N_step"] = 0.0;
+	
 	paraI["scan_yukawa_N"]=0;
 	paraD["yukawa_N"] = 0.0;
 	paraD["yukawa_N_min"] = 0.0;
@@ -29,6 +35,7 @@ void CEPscan_helper::prepareParameterMaps( std::map< std::string, double > &para
 	
 	paraI["interpret_yukawa_as_continuum"]=0;
 	paraI["interpret_lambda_as_continuum"]=0;
+	paraI["interpret_lambda_6_as_continuum"]=0;
 	
 	paraI["include_bosonic_loop"]=0;
 	
@@ -229,6 +236,26 @@ bool CEPscan_helper::checkConsistencyOfParameters( std::map< std::string, double
 		}
 	}
 	
+	//lambda_6_N
+	if( (!paraIsSet["scan_lambda_6_N"] || paraI["scan_lambda_6_N"]==0) && !paraIsSet["lambda_6_N"])
+	{
+		std::cerr <<"Error, no lambda_6_N given" <<std::endl;
+		return false;
+	}
+	if( paraIsSet["scan_lambda_6_N"] && paraI["scan_lambda_6_N"] )
+	{
+		if( !( paraIsSet["lambda_6_N_min"] && paraIsSet["lambda_6_N_max"] && paraIsSet["lambda_6_N_step"] ) )
+		{
+			std::cerr <<"Error, no scan range in lambda_6_N given" <<std::endl;
+			return false;
+		}
+		if( paraD["lambda_6_N_max"] < paraD["lambda_6_N_min"] || paraD["lambda_6_N_step"] <=0.0 )
+		{
+			std::cerr <<"Error, inconsistent scan range in lambda_N" <<std::endl;
+			return false;
+		}
+	}
+	
 	//yukawa_N
 	if( (!paraIsSet["scan_yukawa_N"] || paraI["scan_yukawa_N"]==0) && !paraIsSet["yukawa_N"])
 	{
@@ -250,12 +277,12 @@ bool CEPscan_helper::checkConsistencyOfParameters( std::map< std::string, double
 	}
 	
 	//interprete parameters as physical
-	if( paraIsSet["interpret_yukawa_as_continuum"] && paraI["interpret_yukawa_as_continuum"] )
+	if( (paraIsSet["interpret_yukawa_as_continuum"] && paraI["interpret_yukawa_as_continuum"]) || (paraIsSet["interpret_lambda_as_continuum"] && paraI["interpret_lambda_as_continuum"]) || (paraIsSet["interpret_lambda_6_as_continuum"] && paraI["interpret_lambda_6_as_continuum"]))
 	{
 		if( ( paraIsSet["scan_kappa_N"] && paraI["scan_kappa_N"] && paraD["kappa_N_min"]<0.0 ) || 
 		    ( ( !paraIsSet["scan_kappa_N"] || !paraI["scan_kappa_N"] ) && paraD["kappa_N"]<0.0 ) )
 		{
-			std::cerr <<"Error, interpret_yukawa_as_continuum incompatible with negative kappa_N" <<std::endl;
+			std::cerr <<"Error, interpret_[yukawa|lambda|lambda_6]_as_continuum incompatible with negative kappa_N" <<std::endl;
 			return false;
 		}
 	}
@@ -265,6 +292,15 @@ bool CEPscan_helper::checkConsistencyOfParameters( std::map< std::string, double
 	{
 		std::cerr <<"Error, include_bosonic_loop not set" <<std::endl;
 		return false;
+	}
+	if( paraI["include_bosonic_loop"] )
+	{
+		if( ( paraIsSet["scan_lambda_6_N"] && paraI["scan_lambda_6_N"] ) || 
+		    ( ( !paraIsSet["scan_lambda_6_N"] || !paraI["scan_lambda_6_N"] ) && paraD["lambda_6"]!=0.0 ) )
+		{
+			std::cerr <<"Error, include_bosonic_loop with non-zero lambda_6 not implemented" <<std::endl;
+			return false;
+		}
 	}
 	
 	//iteration stopping
@@ -437,7 +473,7 @@ bool CEPscan_helper::printResultsVectorToStream(const std::vector< resultForOutp
 	output.precision(12);
 	for(std::vector< resultForOutput >::const_iterator iter=results.begin(); iter!=results.end(); ++iter)
 	{
-		if( !( output <<iter->kappa_N <<" " <<iter->lambda_N <<" " <<iter->yukawa_N <<" " <<iter->magnetization <<" " <<iter->staggered_magnetization <<" " <<iter->potential <<" " <<iter->d2U_ov_dmdm <<" " <<iter->d2U_ov_dsds <<" " <<iter->d2U_ov_dmds  <<std::endl ) )
+		if( !( output <<iter->kappa_N <<" " <<iter->lambda_N <<" " <<iter->lambda_6_N <<" " <<iter->yukawa_N <<" " <<iter->magnetization <<" " <<iter->staggered_magnetization <<" " <<iter->potential <<" " <<iter->d2U_ov_dmdm <<" " <<iter->d2U_ov_dsds <<" " <<iter->d2U_ov_dmds  <<std::endl ) )
 		{
 			std::cerr <<"Error during output of results" <<std::endl;
 			return false;

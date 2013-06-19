@@ -3,8 +3,8 @@
 
 void constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyGradient( const double magnetization, const double staggeredMagnetization, double &dU_ov_dm, double &dU_ov_ds)
 {
-	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m)
-	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s)
+	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m) + lambda_6*(6*m^5 + 60*m^3*s^2 + 30*m*s^4)
+	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s) + lambda_6*(6*s^5 + 30*m^4*s + 60*m^2*s^3)
 	//NOTE added a term coming from the boson loop:
 	//U+=16*(m^2+s^2)*lambda_N*N_f^{-1}*P_B
 	//P_B= 1/V * sum_{p} 1/(2-4*lambda_N-4*kappa*sum{cos(P_mu)}) excluding zero and staggered mode
@@ -14,14 +14,16 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyGra
 	dU_ov_dm=0.0; dU_ov_ds=0.0;
 	computeFermionicContribution_onlyGradient_FromStoredEigenvalues(magnetization, staggeredMagnetization, dU_ov_dm, dU_ov_ds);
 	if(useBosonicLoop && !bosonicLoopSet){ bosonicLoop=computeBosonicPropagatorSum_fromStoredSumOfCos();}
-	
+	double mSq(magnetization*magnetization), sSq(staggeredMagnetization*staggeredMagnetization);
 	//std::cout <<"ferm. contr to grad: dU_f/dm=" <<dU_ov_dm <<"   dU_f/ds=" <<dU_ov_ds <<std::endl;
 	dU_ov_dm += -16.0*kappa_N*magnetization + 2.0*magnetization;
-	dU_ov_dm += lambda_N*( 4.0*magnetization*magnetization*magnetization + 12.0*magnetization*staggeredMagnetization*staggeredMagnetization - 4.0*magnetization);
+	dU_ov_dm += lambda_N*( 4.0*mSq*magnetization + 12.0*magnetization*sSq - 4.0*magnetization);
+	dU_ov_dm += lambda_6_N*( 6.0*mSq*mSq*magnetization + 60.0*mSq*magnetization*sSq + 30.0*magnetization*sSq*sSq);
 	if(useBosonicLoop){ dU_ov_dm += 32.0*lambda_N*magnetization*bosonicLoop/static_cast< double >(N_f); }
 	
 	dU_ov_ds += +16.0*kappa_N*staggeredMagnetization + 2.0*staggeredMagnetization;
-	dU_ov_ds += lambda_N*( 4.0*staggeredMagnetization*staggeredMagnetization*staggeredMagnetization + 12.0*magnetization*magnetization*staggeredMagnetization - 4.0*staggeredMagnetization);
+	dU_ov_ds += lambda_N*( 4.0*sSq*staggeredMagnetization + 12.0*mSq*staggeredMagnetization - 4.0*staggeredMagnetization);
+	dU_ov_ds += lambda_6_N*( 6.0*sSq*sSq*staggeredMagnetization + 30.0*mSq*mSq*staggeredMagnetization + 60.0*mSq*sSq*staggeredMagnetization);
 	if(useBosonicLoop){ dU_ov_ds += 32.0*lambda_N*staggeredMagnetization*bosonicLoop/static_cast< double >(N_f); }
 	//std::cout <<"full grad: dU_f/dm=" <<dU_ov_dm <<"   dU_f/ds=" <<dU_ov_ds <<std::endl;
 
