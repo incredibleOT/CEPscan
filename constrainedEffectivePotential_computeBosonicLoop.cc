@@ -1,5 +1,6 @@
 #include "constrainedEffectivePotential.h"
 
+/*
 double constrainedEffectivePotential::computeBosonicPropagatorSum_qad()
 {
 	double twoMinFourLambdaN=2.0-4.0*lambda_N;
@@ -32,7 +33,7 @@ double constrainedEffectivePotential::computeBosonicPropagatorSum_qad()
 	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
 	return dummyForAddition;
 }
-
+*/
 
 double constrainedEffectivePotential::computeBosonicPropagatorSum_fromStoredSumOfCos()
 {

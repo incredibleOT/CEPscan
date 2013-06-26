@@ -16,7 +16,7 @@ numberOfDistingtMomenta(-1), absNuP(NULL), absNuVarP(NULL), absGammaP(NULL), abs
 numberOfDistingtMomenta_bosonic(-1), sumOfCosOfPmu(NULL), factorOfMomentum_bosonic(NULL),
 kappa_N(0.0), lambda_N(0.0), lambda_6_N(0.0), yukawa_N(0.0),
 N_f(1), rho(1.0), one_ov_twoRho(0.5/rho), r(0.5),
-bosonicLoop(-1.0), bosonicLoopSet(false), useBosonicLoop(true),
+bosonicLoop(-1.0), bosonicLoopSet(false), useBosonicLoop(false), useImprovedGaussian(false),
 toleranceForLineMinimization(-1.0), toleranceForConvergence(-1.0), initialStepSize(-1.0), maxNumerOfIterations(100), minimizationAlgorithm(-1), minimizerInitialized(false), iteratorStoppedFlag(false),
 minimizer(NULL)
 {
@@ -1272,7 +1272,8 @@ void constrainedEffectivePotential::set_kappa_lambda_lambda_6_yukawa_N(double ne
 void constrainedEffectivePotential::set_N_f(int new_N){ N_f=new_N; }
 void constrainedEffectivePotential::set_rho(double new_rho){ rho=new_rho; one_ov_twoRho=0.5/rho; fillEigenvalues(); reInitializeMinimizer(); }
 void constrainedEffectivePotential::set_r(double new_r){ r=new_r; fillEigenvalues(); reInitializeMinimizer(); }
-void constrainedEffectivePotential::set_useBosonicLoop(bool newSet){ useBosonicLoop=newSet; }
+void constrainedEffectivePotential::set_useBosonicLoop(bool newSet){ useBosonicLoop=newSet; reInitializeMinimizer(); }
+void constrainedEffectivePotential::set_useImprovedGaussian(bool newSet){ useImprovedGaussian=newSet; reInitializeMinimizer(); }
 
 void constrainedEffectivePotential::set_toleranceForLineMinimization(double new_tol){ toleranceForLineMinimization=new_tol; }
 void constrainedEffectivePotential::set_toleranceForConvergence(double new_tol){ toleranceForConvergence=new_tol; }
@@ -1325,6 +1326,10 @@ double constrainedEffectivePotential::get_yukawa_N(){ return yukawa_N; }
 int constrainedEffectivePotential::get_N_f(){ return N_f; }
 double constrainedEffectivePotential::get_rho(){ return rho; }
 double constrainedEffectivePotential::get_r(){ return r; }
+
+bool constrainedEffectivePotential::get_useBosonicLoop(){ return useBosonicLoop; }
+bool constrainedEffectivePotential::get_useImprovedGaussian(){ return useImprovedGaussian; }
+	
 
 double  constrainedEffectivePotential::get_toleranceForLineMinimization(){ return toleranceForLineMinimization; }
 double  constrainedEffectivePotential::get_toleranceForConvergence(){ return toleranceForConvergence; }

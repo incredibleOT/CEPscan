@@ -4,10 +4,31 @@
 double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyFunction(const double magnetization, const double staggeredMagnetization)
 {
 	//eq 4.35 philipp's thesis
-	//U= -8*kappa*(m^2-s^2) + m^2 + s^2 + lambda*( m^4 + s^4 + 6*m^2s^2 - 2*(m^2+s^2)) + lambda_6(m^6 + s^6 + 15*m^4*s^2 + 15*m^2*s^4) U_f(m,s) 
-	//NOTE added a term coming from the boson loop:
+	//U= -8*kappa*(m^2-s^2) + m^2 + s^2 + lambda*( m^4 + s^4 + 6*m^2s^2 - 2*(m^2+s^2)) + lambda_6(m^6 + s^6 + 15*m^4*s^2 + 15*m^2*s^4) U_f(m,s)
+	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m) + lambda_6*(6*m^5 + 60*m^3*s^2 + 30*m*s^4)
+	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s) + lambda_6*(6*s^5 + 30*m^4*s + 60*m^2*s^3)
+	//
+	//NOTE there are two possible improvements for the potential
+	//
+	//the 1st oneis a term coming from the boson loop, or better: the first order in lambda:
 	//U+=16*(m^2+s^2)*lambda_N*N_f^{-1}*P_B
 	//P_B= 1/V * sum_{p} 1/(2-4*lambda_N-4*kappa*sum{cos(P_mu)}) excluding zero and staggered mode
+	//NOTE, does not work with lambda_6!=0
+	//
+	//the 2nd possibility is to include an improved bosonic determinant:
+	//U+=-1/(2 V N_f) * sum_{p} log(2 - 4 lambda_N - 4*kappa*sum{cos(P_mu)} + 8 lambda_N*(m^2+s^2) + 18*lambda_6_N(m^4 + s^4 + 6 m^2 s^2))  excluding zero and staggered mode
+	//NOTE, not both possibilities can be used at the same time
+	if(useBosonicLoop && useImprovedGaussian)
+	{
+		std::cerr <<"Error, using the bosonic loop and the improved gaussian contribution at the same time is not implemented" <<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if(useBosonicLoop && lambda_6_N!=0.0)
+	{
+		std::cerr <<"Error, using the bosonic loop non-zero lambda_6_N at the same time is not implemented" <<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	
 	double result(0.0);
 	double mSq=magnetization*magnetization;
 	double sSq=staggeredMagnetization*staggeredMagnetization;
@@ -19,7 +40,11 @@ double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyF
 	result+= lambda_N * ( mSq*mSq + sSq*sSq + 6.0*mSq*sSq -2.0*(mSq + sSq) );
 	result+= lambda_6_N*( mSq*mSq*mSq + sSq*sSq*sSq + 15.0*mSq*mSq*sSq + 15.0*mSq*sSq*sSq );
 	if(useBosonicLoop){ result+= 16.0*lambda_N*( mSq + sSq )*bosonicLoop/static_cast< double >(N_f); }
-	
+	if(useImprovedGaussian)
+	{
+		double bosDet( computeBosonicDeterminantContributionForImprovedGaussian_onlyFunction_fromStoredSumOfCos(magnetization, staggeredMagnetization) );
+		result+=bosDet;
+	}
 	return result;
 }
 
@@ -37,6 +62,113 @@ double constrainedEffectivePotential::fermionicContributionInline_onlyFunction_F
 }
 
 
+
+double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization)
+{
+	if(yukawa_N < 0.0)
+	{
+		std::cerr <<"Error, no yukawa coupling set in constrainedEffectivePotential::computeFermionicContribution_onlyFunction_qad(double magnetization, double staggeredMagnetization)" <<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if(yukawa_N==0.0){ return 0.0; }
+	double mSq=magnetization*magnetization;
+	double sSq=staggeredMagnetization*staggeredMagnetization;
+	double ySquared(yukawa_N*yukawa_N);
+	double ySquaredmSquared(ySquared*mSq);
+	double ySquaredsSquared(ySquared*sSq);
+	double dummyForAddition(0.0);
+	
+	for(int index=0; index<numberOfDistingtMomenta; ++index)
+	{
+		dummyForAddition+=fermionicContributionInline_onlyFunction_FromStoredEigenvalues(index, ySquaredmSquared, ySquaredsSquared);
+	}
+	
+	dummyForAddition*=-2.0;
+	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
+	return dummyForAddition;
+}
+
+
+double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags)
+{
+	double magnetization=gsl_vector_get(mags,0);
+	double staggeredMagnetization=gsl_vector_get(mags,1);
+	
+	return computeConstrainedEffectivePotential_onlyFunction(magnetization, staggeredMagnetization);
+}
+
+
+
+double constrainedEffectivePotential::computeBosonicDeterminantContributionForImprovedGaussian_onlyFunction_qad(const double magnetization, const double staggeredMagnetization)
+{
+	//computes: -1/(2 V N_f) * sum_{p} log(2 - 4 lambda_N - 4*kappa*sum{cos(P_mu)} + 8 lambda_N*(m^2+s^2) + 18*lambda_6_N(m^4 + s^4 + 6 m^2 s^2))  excluding zero and staggered mode
+	double result(0.0);
+	double mSq(magnetization*magnetization), sSq(staggeredMagnetization*staggeredMagnetization);
+	double constantPart(2.0 - 4.0*lambda_N + 8.0*lambda_N*( mSq + sSq ) + 18.0*lambda_6_N*(mSq*mSq + sSq*sSq + 6.0*mSq*sSq) );
+	double fourKappa=4.0*kappa_N;
+	
+	int L0_half=L0/2, L1_half=L1/2, L2_half=L2/2, L3_half=L3/2;
+	for(int l0=0; l0<L0; ++l0)
+	{
+		for(int l1=0; l1<L1; ++l1)
+		{
+			for(int l2=0; l2<L2; ++l2)
+			{
+				for(int l3=((l0+l1+l2)?0:1); l3<L3_half; ++l3)
+				{
+					
+					result+=log(constantPart - fourKappa*(cosOfPmu_L0[l0] + cosOfPmu_L1[l1] + cosOfPmu_L2[l2] + cosOfPmu_L3[l3]));
+// 					counter++;
+				}
+				for(int l3=((l0==L0_half && l1==L1_half && l2==L2_half )?L3_half+1:L3_half); l3<L3; ++l3)
+				{
+					result+=log(constantPart - fourKappa*(cosOfPmu_L0[l0] + cosOfPmu_L1[l1] + cosOfPmu_L2[l2] + cosOfPmu_L3[l3]));
+// 					counter++;
+				}
+				
+			}
+		}
+	}
+	result*=-0.5;
+	result/=static_cast< double >(L0); result/=static_cast< double >(L1); result/=static_cast< double >(L2); result/=static_cast< double >(L3); 
+	result/=static_cast< double >(N_f);
+	return result;
+}
+
+
+
+
+double constrainedEffectivePotential::computeBosonicDeterminantContributionForImprovedGaussian_onlyFunction_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization)
+{
+	//computes: -1/(2 V N_f) * sum_{p} log(2 - 4 lambda_N - 4*kappa*sum{cos(P_mu)} + 8 lambda_N*(m^2+s^2) + 18*lambda_6_N(m^4 + s^4 + 6 m^2 s^2))  excluding zero and staggered mode
+	double result(0.0);
+	double mSq(magnetization*magnetization), sSq(staggeredMagnetization*staggeredMagnetization);
+	double constantPart(2.0 - 4.0*lambda_N + 8.0*lambda_N*( mSq + sSq ) + 18.0*lambda_6_N*(mSq*mSq + sSq*sSq + 6.0*mSq*sSq) );
+	double fourKappa=4.0*kappa_N;
+	
+	for(int index=0; index<numberOfDistingtMomenta_bosonic; ++index)
+	{
+		result+= factorOfMomentum_bosonic[index]*log(constantPart - fourKappa*sumOfCosOfPmu[index]);
+	}
+	
+	result*=-0.5;
+	result/=static_cast< double >(L0); result/=static_cast< double >(L1); result/=static_cast< double >(L2); result/=static_cast< double >(L3); 
+	result/=static_cast< double >(N_f);
+	return result;
+}
+
+
+
+double wrapper_computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params)
+{
+	constrainedEffectivePotential *CEP = (constrainedEffectivePotential *)params;
+	return CEP->computeConstrainedEffectivePotential_onlyFunction_gsl(mags);
+}
+
+
+
+
+/*
 //computation of the fermionic contribution
 //just computes the sum of logs as in philipp's thesis 4.35
 double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_qad(const double magnetization, const double staggeredMagnetization)
@@ -110,48 +242,8 @@ double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_
 	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
 	return dummyForAddition;
 }
+*/
 
-
-
-double constrainedEffectivePotential::computeFermionicContribution_onlyFunction_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization)
-{
-	if(yukawa_N < 0.0)
-	{
-		std::cerr <<"Error, no yukawa coupling set in constrainedEffectivePotential::computeFermionicContribution_onlyFunction_qad(double magnetization, double staggeredMagnetization)" <<std::endl;
-		exit(EXIT_FAILURE);
-	}
-	if(yukawa_N==0.0){ return 0.0; }
-	double mSq=magnetization*magnetization;
-	double sSq=staggeredMagnetization*staggeredMagnetization;
-	double ySquared(yukawa_N*yukawa_N);
-	double ySquaredmSquared(ySquared*mSq);
-	double ySquaredsSquared(ySquared*sSq);
-	double dummyForAddition(0.0);
-	
-	for(int index=0; index<numberOfDistingtMomenta; ++index)
-	{
-		dummyForAddition+=fermionicContributionInline_onlyFunction_FromStoredEigenvalues(index, ySquaredmSquared, ySquaredsSquared);
-	}
-	
-	dummyForAddition*=-2.0;
-	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
-	return dummyForAddition;
-}
-
-
-double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags)
-{
-	double magnetization=gsl_vector_get(mags,0);
-	double staggeredMagnetization=gsl_vector_get(mags,1);
-	
-	return computeConstrainedEffectivePotential_onlyFunction(magnetization, staggeredMagnetization);
-}
-
-double wrapper_computeConstrainedEffectivePotential_onlyFunction_gsl(const gsl_vector *mags, void *params)
-{
-	constrainedEffectivePotential *CEP = (constrainedEffectivePotential *)params;
-	return CEP->computeConstrainedEffectivePotential_onlyFunction_gsl(mags);
-}
 
 
 /*
