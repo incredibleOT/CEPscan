@@ -36,6 +36,10 @@ interpret_lambda_6_as_continuum  0
 #whether or not the first order in lambda should be included(default 1)
 include_bosonic_loop       0
 
+#whether an improved treelevel ansatz should be used coming from 
+#including contributions from the phi^4 and phi^6 term to the gaussian contribution
+use_improved_treeLevel     0
+
 # default: N_f=1, rho=1, r=0.5
 # N_f                       1
 # rho                       1.0
@@ -55,7 +59,7 @@ minimization_algorithm         3
 # 1 use given starting point, 2 use given starting point first and during scan last result
 # 3 perform a scan in {m_0:m_1:m_s , s_0} and {m_0, s_0:s_1:s_s}, 
 # determin the lowest point and start from there - initial stepsize will be the minimum of (s_0/2,m_0/2)
-# 4perform a 2-d scan in {m_0:m_1:m_s ,s_0:s_1:s_s} 
+# 4 perform a 2-d scan in {m_0:m_1:m_s ,s_0:s_1:s_s} 
 # determin the lowest point and start from there - initial stepsize will be the minimum of (s_0/2,m_0/2))
 starting_procedure           3
 
@@ -72,5 +76,6 @@ starting_procedure           3
  step_s                     0.05
 
 #may use: [Ls]->Lxx [Lt]->Txx [k]->k_xxxx [l]->l_xxxx [l6]->l6_xxxx [y]->y_xxxx for the scanables: e.g. k_xx_yy with max and min)
+#         [loop]->withLoop or noLoop    [bc]-pBC or aBC for periodic or antiperiodic bc   [det]->withDet or noNet, if use_improved_treeLevel is on or off
 outputfile                  output/output_[Ls][Lt]_[y]_[l]_[l6]_[k].txt
 

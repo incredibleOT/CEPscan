@@ -60,8 +60,11 @@ int main(int narg,char **arg)
 	if(parametersIsSet["rho"] && parametersDouble["rho"]!=CEP.get_rho()){ CEP.set_rho(parametersDouble["rho"]); }
 	if(parametersIsSet["r"] && parametersDouble["r"]!=CEP.get_r()){ CEP.set_rho(parametersDouble["r"]); }
 	
-	//use bosonic loop
+	//include_bosonic_loop
 	CEP.set_useBosonicLoop(parametersInt["include_bosonic_loop"]);
+	//use_improved_treeLevel
+	CEP.set_useImprovedGaussian(parametersInt["use_improved_treeLevel"]);
+	
 	
 	//set minimization details
 	CEP.set_toleranceForLineMinimization(parametersDouble["tolerance_for_line_minimization"]);
@@ -218,7 +221,7 @@ int main(int narg,char **arg)
 	
 	//output to cout
 	{
-		cout <<"Results (kappa_N,   lambda_N,   lambda_6_N,   yukawa_N,   mag,   stag.mag,   pot:" <<endl;
+		cout <<"Results (kappa_N,   lambda_N,   lambda_6_N,   yukawa_N,   mag,   stag.mag,   pot,   d2U_ov_dmdm,    d2U_ov_dsds,    d2U_ov_dmds:" <<endl;
 		CEPscan_helper::printResultsVectorToStream( results, cout );
 	}
 	//
@@ -290,6 +293,15 @@ int main(int narg,char **arg)
 				else{ ss <<"pBC";}
 				outputFileName.replace(outputFileName.find("[bc]"),4, ss.str() );
 			}
+			if( outputFileName.find("[det]")!=std::string::npos )
+			{
+				std::ostringstream ss;
+				if(parametersInt["use_improved_treeLevel"]){ ss <<"withDet";}
+				else{ ss <<"noDet";}
+				outputFileName.replace(outputFileName.find("[det]"),5, ss.str() );
+			}
+			
+			
 			
 			cout <<"output fileName: " << outputFileName <<endl;
 			
