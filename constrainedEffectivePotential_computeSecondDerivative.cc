@@ -9,7 +9,7 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_secondD
 	//d^2U/dm^2 = d^2U_f/d_m^2 - 16 kappa + 2 + lambda*(12*m^2 + 12*s^2 - 4) + lambda_6*(30*m^4 + 180*m^2*s^2 + 30*s^4)
 	//d^2U/ds^2 = d^2U_f/d_m^2 + 16 kappa + 2 + lambda*(12*s^2 + 12*m^2 - 4) + lambda_6*(30*s^4 + 180*m^2*s^2 + 30*m^4)
 	//d^2U/dmds = d^2U_f/dmds  + lambda*(24*m*s) + lambda_6*(120*m^3*s + 120*m*s^3)
-	//NOTE there are two possible improvements for the potential
+	//NOTE there are three possible improvements for the potential
 	//
 	//the 1st one is a term coming from the boson loop, or better: the first order in lambda:
 	//U+=16*(m^2+s^2)*lambda_N*N_f^{-1}*P_B
@@ -33,8 +33,28 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_secondD
 	//d^2U/dm^2 += -1/(2 V N_f) * sum_{p}[ (16*lambda_N + 216*lambda_6_N*(m^2 + s^2))/D_p   -  (( 16*lambda_N*m +  72*lambda_6_N*(m^3 + 3*m*s^2))/D_p )^2 ]
 	//d^2U/dm^2 += -1/(2 V N_f) * sum_{p}[ (16*lambda_N + 216*lambda_6_N*(m^2 + s^2))/D_p   -  (( 16*lambda_N*s +  72*lambda_6_N*(s^3 + 3*m^2*s))/D_p )^2 ]
 	//d^2U/dmds += -1/(2 V N_f) * sum_{p}[ (432*lambda_6_N*m*s)/D_p   -   ( ( 16*lambda_N*m +  72*lambda_6_N*(m^3 + 3*m*s^2)) * (16*lambda_N*s +  72*lambda_6_N*(s^3 + 3*m^2*s))/D_p^2 ) ]
+	//NOTE, not both of the possibilities above can be used at the same time
+	//3rd: Also consider the first order in lambda and lambda_6 (makes only sence, if the improved tree-level is used)
+	//U+=8/N_f^2*(lambda_N + lambda_6N * (9*(m^2+s^2)))* P_B^2 + 24*lambda_6N/N_f^3*P_B^3
+	//with P_B=1/V*sum_{p}1/ D_p(m,s)   excluding the zero and staggered mode
+	//For the derivatives, i use the notation: P_Bn=1/V*sum_{p}1/ (D_p(m,s))^n 
+	//and the shortcut: 
+	//E=8/N_f^2*(lambda_N + 9*lambda_6N*(m^2 + s^2))  
+	//and F=24*lambda_6N/N_f^3 and 
+	//D_m = dD_p(m,s)/d_m = 16*lambda_N*m + 72*lambda_6N*(m^3 + 3*m*s^2)
+	//D_s = dD_p(m,s)/d_s = 16*lambda_N*s + 72*lambda_6N*(s^3 + 3*m^2*s)
+	//dU/dm+=  144 * lambda_6N/N_f^2* m * P_B^2   -   2*E*D_m*P_B*P_B2   -   3*F*D_m*P_B^2*P_B2
+	//dU/ds+=  144 * lambda_6N/N_f^2* s * P_B^2   -   2*E*D_s*P_B*P_B2   -   3*F*D_s*P_B^2*P_B2
+	//
+	//d^2U/dm^2 +=  144 * lambda_6N/N_f^2 * P_B^2 - [ 288 * lambda_6N/N_f^2 * D_m  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
+	//            + 2*E*D_m^2*[P_B2^2 + 2 * P_B * P_B3]
+	//            - 3*F*( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) * P_B^2 * P_B2
+	//            + 6*F*D_m^2*[ P_B * P_B2^2  -  P_B^2 * P_B3]
+	//d^2U/ds^2 +=  144 * lambda_6N/N_f^2 * P_B^2 - [ 288 * lambda_6N/N_f^2 * D_s  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
+	//            + 2*E*D_s^2*[P_B2^2 + 2 * P_B * P_B3]
+	//            - 3*F*( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) * P_B^2 * P_B2
+	//            + 6*F*D_s^2*[ P_B * P_B2^2  -  P_B^2 * P_B3]
 	
-	//NOTE, not both possibilities can be used at the same time
 	if(useBosonicLoop && useImprovedGaussian)
 	{
 		std::cerr <<"Error, using the bosonic loop and the improved gaussian contribution at the same time is not implemented" <<std::endl;
@@ -183,4 +203,5 @@ void constrainedEffectivePotential::compute_BosonicDeterminantContributionForImp
 
 
 
-
+void computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2U_ov_dmdm, double &d2U_ov_dsds, double &d2U_ov_dmds);
+	void computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2U_BosDet_ov_dmdm, double &d2U_BosDet_ov_dsds, double &d2U_BosDet_ov_dmds, double &d2U_1st_ov_dmdm, double &d2U_1st_ov_dsds, double &d2U_1st_ov_dmds);

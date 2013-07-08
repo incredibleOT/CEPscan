@@ -16,7 +16,7 @@ numberOfDistingtMomenta(-1), absNuP(NULL), absNuVarP(NULL), absGammaP(NULL), abs
 numberOfDistingtMomenta_bosonic(-1), sumOfCosOfPmu(NULL), factorOfMomentum_bosonic(NULL),
 kappa_N(0.0), lambda_N(0.0), lambda_6_N(0.0), yukawa_N(0.0),
 N_f(1), rho(1.0), one_ov_twoRho(0.5/rho), r(0.5),
-bosonicLoop(-1.0), bosonicLoopSet(false), useBosonicLoop(false), useImprovedGaussian(false),
+bosonicLoop(-1.0), bosonicLoopSet(false), useBosonicLoop(false), useImprovedGaussian(false), useImprovedFirstOrder(false), 
 toleranceForLineMinimization(-1.0), toleranceForConvergence(-1.0), initialStepSize(-1.0), maxNumerOfIterations(100), minimizationAlgorithm(-1), minimizerInitialized(false), iteratorStoppedFlag(false),
 minimizer(NULL)
 {
@@ -393,7 +393,7 @@ void constrainedEffectivePotential::fillEigenvalues()
 					}
 					{
 						int l2=l1;
-						//p,q,q, 24
+						//p,q,q, 24void get_extends(int &L0, int &L1, int &L2, int &L3)
 						computeAnalyticalEigenvalue_fromIndex_pAndVarP( l0,l1,l2,l3, nuOfP, nuOfVarP );
 						absNuP[counter]=std::abs(nuOfP); 
 						absNuVarP[counter]=std::abs(nuOfVarP);
@@ -1274,6 +1274,7 @@ void constrainedEffectivePotential::set_rho(double new_rho){ rho=new_rho; one_ov
 void constrainedEffectivePotential::set_r(double new_r){ r=new_r; fillEigenvalues(); reInitializeMinimizer(); }
 void constrainedEffectivePotential::set_useBosonicLoop(bool newSet){ useBosonicLoop=newSet; reInitializeMinimizer(); }
 void constrainedEffectivePotential::set_useImprovedGaussian(bool newSet){ useImprovedGaussian=newSet; reInitializeMinimizer(); }
+void constrainedEffectivePotential::set_useImprovedFirstOrder(bool newSet){ useImprovedFirstOrder=newSet; reInitializeMinimizer(); }
 
 void constrainedEffectivePotential::set_toleranceForLineMinimization(double new_tol){ toleranceForLineMinimization=new_tol; }
 void constrainedEffectivePotential::set_toleranceForConvergence(double new_tol){ toleranceForConvergence=new_tol; }
@@ -1317,7 +1318,8 @@ void constrainedEffectivePotential::set_minimizationAlgorithm(int new_alg)
 	}
 }
 
-
+void constrainedEffectivePotential::get_extends(int &l0, int &l1, int &l2, int &l3){ l0=L0; l1=L1; l2=L2; l3=L3; }	
+	
 double constrainedEffectivePotential::get_kappa_N(){ return kappa_N; }
 double constrainedEffectivePotential::get_lambda_N(){ return lambda_N; }
 double constrainedEffectivePotential::get_lambda_6_N(){ return lambda_6_N; }
@@ -1329,6 +1331,7 @@ double constrainedEffectivePotential::get_r(){ return r; }
 
 bool constrainedEffectivePotential::get_useBosonicLoop(){ return useBosonicLoop; }
 bool constrainedEffectivePotential::get_useImprovedGaussian(){ return useImprovedGaussian; }
+bool constrainedEffectivePotential::get_useImprovedFirstOrder(){ return useImprovedFirstOrder; }
 	
 
 double  constrainedEffectivePotential::get_toleranceForLineMinimization(){ return toleranceForLineMinimization; }

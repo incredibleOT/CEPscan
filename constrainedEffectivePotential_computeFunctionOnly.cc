@@ -8,16 +8,22 @@ double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyF
 	//dU/dm = dU_f/d_m - 16 kappa * m + 2*m + lambda*(4*m^3 + 12 *m*s^2 - 4*m) + lambda_6*(6*m^5 + 60*m^3*s^2 + 30*m*s^4)
 	//dU/ds = dU_f/d_m + 16 kappa * s + 2*s + lambda*(4*s^3 + 12 *m^2*s - 4*s) + lambda_6*(6*s^5 + 30*m^4*s + 60*m^2*s^3)
 	//
-	//NOTE there are two possible improvements for the potential
+	//NOTE there are three possible improvements for the potential
 	//
 	//the 1st oneis a term coming from the boson loop, or better: the first order in lambda:
-	//U+=16*(m^2+s^2)*lambda_N*N_f^{-1}*P_B
-	//P_B= 1/V * sum_{p} 1/(2-4*lambda_N-4*kappa*sum{cos(P_mu)}) excluding zero and staggered mode
+	//U+=16*(m^2+s^2)*lambda_N*N_f^{-1}*P_B_naive
+	//P_B_naive= 1/V * sum_{p} 1/(2-4*lambda_N-4*kappa*sum{cos(P_mu)}) excluding zero and staggered mode
 	//NOTE, does not work with lambda_6!=0
 	//
 	//the 2nd possibility is to include an improved bosonic determinant:
 	//U+=-1/(2 V N_f) * sum_{p} log(2 - 4 lambda_N - 4*kappa*sum{cos(P_mu)} + 8 lambda_N*(m^2+s^2) + 18*lambda_6_N(m^4 + s^4 + 6 m^2 s^2))  excluding zero and staggered mode
-	//NOTE, not both possibilities can be used at the same time
+	//in short: U+=-1/(2 V N_f)*sum_{p} D_p(m,s)
+	//with: D_p(m,s)=2 - 4 lambda_N - 4*kappa*sum{cos(P_mu)} + 8 lambda_N*(m^2+s^2) + 18*lambda_6_N(m^4 + s^4 + 6 m^2 s^2)
+	//NOTE, not both of the possibilities above can be used at the same time
+	//
+	//3rd: Also consider the first order in lambda and lambda_6 (makes only sence, if the improved tree-level is used)
+	//U+=8/N_f^2*(lambda_N + lambda_6N * (9*(m^2+s^2)))* P_B^2 + 24*lambda_6N/N_f^3*P_B^3
+	//with P_B=1/V*sum_{p} 1/D_p(m,s)   excluding the zero and staggered mode
 	if(useBosonicLoop && useImprovedGaussian)
 	{
 		std::cerr <<"Error, using the bosonic loop and the improved gaussian contribution at the same time is not implemented" <<std::endl;
@@ -40,10 +46,16 @@ double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyF
 	result+= lambda_N * ( mSq*mSq + sSq*sSq + 6.0*mSq*sSq -2.0*(mSq + sSq) );
 	result+= lambda_6_N*( mSq*mSq*mSq + sSq*sSq*sSq + 15.0*mSq*mSq*sSq + 15.0*mSq*sSq*sSq );
 	if(useBosonicLoop){ result+= 16.0*lambda_N*( mSq + sSq )*bosonicLoop/static_cast< double >(N_f); }
-	if(useImprovedGaussian)
+	
+	if(useImprovedGaussian && !useImprovedFirstOrder)
 	{
 		double bosDet( computeBosonicDeterminantContributionForImprovedGaussian_onlyFunction_fromStoredSumOfCos(magnetization, staggeredMagnetization) );
 		result+=bosDet;
+	}
+	else if(useImprovedFirstOrder)
+	{
+		double bosDetAnd1stOrder( computeImprovedBosDetAndFirstOrderContribution_onlyFunction_fromStoredSumOfCos(magnetization, staggeredMagnetization) );
+		result+=bosDetAnd1stOrder;
 	}
 	return result;
 }
@@ -155,6 +167,51 @@ double constrainedEffectivePotential::computeBosonicDeterminantContributionForIm
 	result/=static_cast< double >(L0); result/=static_cast< double >(L1); result/=static_cast< double >(L2); result/=static_cast< double >(L3); 
 	result/=static_cast< double >(N_f);
 	return result;
+}
+
+
+
+double constrainedEffectivePotential::computeImprovedBosDetAndFirstOrderContribution_onlyFunction_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization)
+{
+	double U_BosDet(0.0),U_1st(0.0);
+	computeImprovedBosDetAndFirstOrderContribution_onlyFunction_fromStoredSumOfCos(magnetization, staggeredMagnetization, U_BosDet, U_1st);
+	return U_BosDet+U_1st;
+}
+
+
+void constrainedEffectivePotential::computeImprovedBosDetAndFirstOrderContribution_onlyFunction_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &U_BosDet, double &U_1st)
+{
+	//computes:
+	//contribution from the bosonic determinant in case of the improved tree-level and the first order contribution
+	//
+	//U_BosDet = - 1/(2 V N_f) * sum_{p} log(D_p(m,s) 
+	//and
+	//U_1st =  8/N_f^2*(lambda_N + lambda_6N * (9*(m^2+s^2)))* P_B^2 + 24*lambda_6N/N_f^3*P_B^3
+	//with 
+	//P_B=\sum_{p} D_p(m,s)   excluding the zero and staggered mode
+	//and D_p(m,s)=2 - 4 lambda_N - 4*kappa*sum{cos(P_mu)} + 8 lambda_N*(m^2+s^2) + 18*lambda_6_N(m^4 + s^4 + 6 m^2 s^2)
+	U_BosDet=0.0;
+	U_1st=0.0;
+	
+	double mSq(magnetization*magnetization), sSq(staggeredMagnetization*staggeredMagnetization);
+	double constantPart(2.0 - 4.0*lambda_N + 8.0*lambda_N*( mSq + sSq ) + 18.0*lambda_6_N*(mSq*mSq + sSq*sSq + 6.0*mSq*sSq) );
+	double fourKappa=4.0*kappa_N;
+	
+	double dummyForLog(0.0), dummyForAddition(0.0);
+	for(int index=0; index<numberOfDistingtMomenta_bosonic; ++index)
+	{
+		dummyForLog+= factorOfMomentum_bosonic[index]*log(constantPart - fourKappa*sumOfCosOfPmu[index]);
+		dummyForAddition+=factorOfMomentum_bosonic[index]/(constantPart - fourKappa*sumOfCosOfPmu[index]);
+	}
+	
+	dummyForLog*=-0.5;
+	dummyForLog/=static_cast< double >(L0); dummyForLog/=static_cast< double >(L1); dummyForLog/=static_cast< double >(L2); dummyForLog/=static_cast< double >(L3); 
+	dummyForLog/=static_cast< double >(N_f);
+	
+	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
+	U_BosDet=dummyForLog;
+	U_1st=8.0/static_cast< double >(N_f*N_f)*(lambda_N + lambda_6_N*9.0*(mSq+sSq))*dummyForAddition*dummyForAddition;
+	U_1st+=24.0*lambda_6_N/static_cast< double >(N_f*N_f*N_f)*dummyForAddition*dummyForAddition*dummyForAddition;
 }
 
 
