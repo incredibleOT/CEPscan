@@ -152,6 +152,32 @@ int main(int narg,char **arg)
 			cout <<"U_BosDet+U_1st= " <<U_part <<"     d(U_BosDet+U_1st)/dm= " <<dU_part_ov_dm <<"     d(U_BosDet + U_1st)/ds= " <<dU_part_ov_ds <<endl;
 			cout <<"U= " <<U <<"     dU/dm= " <<dU_ov_dm <<"     dU/ds= " <<dU_ov_ds <<endl;
 		}
+		//second derivatives
+		{
+			cout << endl;
+			cout <<"2nd derivatives from direct computation:" <<endl;
+			double d2U_ferm_dmdm(0.0), d2U_ferm_dsds(0.0), d2U_ferm_dmds(0.0);
+			double d2U_BosDet_dmdm_1(0.0), d2U_BosDet_dsds_1(0.0), d2U_BosDet_dmds_1(0.0);
+			double d2U_BosDet_dmdm_2(0.0), d2U_BosDet_dsds_2(0.0), d2U_BosDet_dmds_2(0.0);
+			double d2U_1st_dmdm(0.0), d2U_1st_dsds(0.0), d2U_1st_dmds(0.0);
+			double d2U_part_dmdm(0.0), d2U_part_dsds(0.0), d2U_part_dmds(0.0);
+			double d2U_dmdm(0.0), d2U_dsds(0.0), d2U_dmds(0.0);
+			
+			CEP.compute_fermionicContribution_secondDerivatives_FromStoredEigenvalues(mCentral, sCentral, d2U_ferm_dmdm, d2U_ferm_dsds, d2U_ferm_dmds);
+			CEP.compute_BosonicDeterminantContributionForImprovedGaussian_secondDerivatives_fromStoredSumOfCos(mCentral, sCentral, d2U_BosDet_dmdm_1, d2U_BosDet_dsds_1, d2U_BosDet_dmds_1);
+			CEP.computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(mCentral, sCentral, d2U_BosDet_dmdm_2, d2U_BosDet_dsds_2, d2U_BosDet_dmds_2, d2U_1st_dmdm, d2U_1st_dsds, d2U_1st_dmds);
+			CEP.computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(mCentral, sCentral, d2U_part_dmdm, d2U_part_dsds, d2U_part_dmds);
+			CEP.computeConstrainedEffectivePotential_secondDerivatives(mCentral, sCentral, d2U_dmdm, d2U_dsds, d2U_dmds);
+			
+			cout <<"d2U_ferm/dm^2= " <<d2U_ferm_dmdm <<"     d2U_ferm/ds^2= " <<d2U_ferm_dsds <<"     d2U_ferm/dmds= " <<d2U_ferm_dmds <<endl;
+			cout <<"d2U_BosDet/dm^2_1= " <<d2U_BosDet_dmdm_1 <<"     d2U_BosDet_/ds^2_1= " <<d2U_BosDet_dsds_1 <<"     d2U_BosDet/dmds_1= " <<d2U_BosDet_dmds_1 <<endl;
+			cout <<"d2U_BosDet/dm^2_2= " <<d2U_BosDet_dmdm_2 <<"     d2U_BosDet_/ds^2_2= " <<d2U_BosDet_dsds_2 <<"     d2U_BosDet/dmds_2= " <<d2U_BosDet_dmds_2 <<endl;
+			cout <<"d2U_1st/dm^2= " <<d2U_1st_dmdm <<"     d2U_1st/ds^2= " <<d2U_1st_dsds <<"     d2U_1st/dmds= " <<d2U_1st_dmds <<endl;
+			cout <<"d2U_part/dm^2= " <<d2U_part_dmdm <<"     d2U_part/ds^2= " <<d2U_part_dsds <<"     d2U_part/dmds= " <<d2U_part_dmds <<endl;
+			cout <<"d2U/dm^2= " <<d2U_dmdm <<"     d2U/ds^2= " <<d2U_dsds <<"     d2U/dmds= " <<d2U_dmds <<endl;
+			
+			
+		}
 		//first derivatives from function
 		{
 		//just test full function
@@ -227,7 +253,94 @@ int main(int narg,char **arg)
 			cout <<"dU_BosDet/dm= " <<dU_BosDet_ov_dm_1 <<"     dU_BosDet/ds= " <<dU_BosDet_ov_ds_1 <<endl;
 			cout <<"dU_1st/dm= " <<dU_1st_ov_dm_1 <<"     dU_1st/ds= " <<dU_1st_ov_ds_1 <<endl;
 		}
+		//second derivatives from difference quotient of gradient
+		{
+			cout << endl;
+			cout <<"Comparison of 2nd derivatives from difference quotient of gradient and direct computation:" <<endl;
+			double eps1(0.00001), eps2(0.000001), eps3(0.0000001);
+			double dummy_plus_1(0.0), dummy_minus_1(0.0), dummy_plus_2(0.0), dummy_minus_2(0.0);
+			double d2U_ov_dmdm_1(0.0), d2U_ov_dmdm_2(0.0), d2U_ov_dmdm_3(0.0);
+			double d2U_ov_dsds_1(0.0), d2U_ov_dsds_2(0.0), d2U_ov_dsds_3(0.0);
+			double d2U_ov_dmds_1(0.0), d2U_ov_dmds_2(0.0), d2U_ov_dmds_3(0.0);
+			double d2U_ov_dmdm_orig(0.0), d2U_ov_dsds_orig(0.0), d2U_ov_dmds_orig(0.0);
 			
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral+eps1, sCentral, dummy_plus_1, dummy_plus_2);
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral-eps1, sCentral, dummy_minus_1, dummy_minus_2);
+			d2U_ov_dmdm_1=0.5*(dummy_plus_1 - dummy_minus_1)/eps1;
+			d2U_ov_dmds_1=0.5*(dummy_plus_2 - dummy_minus_2)/eps1;
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral+eps1, dummy_plus_1, dummy_plus_2);
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral-eps1, dummy_minus_1, dummy_minus_2);
+			d2U_ov_dsds_1=0.5*(dummy_plus_2 - dummy_minus_2)/eps1;
+			
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral+eps2, sCentral, dummy_plus_1, dummy_plus_2);
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral-eps2, sCentral, dummy_minus_1, dummy_minus_2);
+			d2U_ov_dmdm_2=0.5*(dummy_plus_1 - dummy_minus_1)/eps2;
+			d2U_ov_dmds_2=0.5*(dummy_plus_2 - dummy_minus_2)/eps2;
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral+eps2, dummy_plus_1, dummy_plus_2);
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral-eps2, dummy_minus_1, dummy_minus_2);
+			d2U_ov_dsds_2=0.5*(dummy_plus_2 - dummy_minus_2)/eps2;
+			
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral+eps3, sCentral, dummy_plus_1, dummy_plus_2);
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral-eps3, sCentral, dummy_minus_1, dummy_minus_2);
+			d2U_ov_dmdm_3=0.5*(dummy_plus_1 - dummy_minus_1)/eps3;
+			d2U_ov_dmds_3=0.5*(dummy_plus_2 - dummy_minus_2)/eps3;
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral+eps3, dummy_plus_1, dummy_plus_2);
+			CEP.computeConstrainedEffectivePotential_onlyGradient(mCentral, sCentral-eps3, dummy_minus_1, dummy_minus_2);
+			d2U_ov_dsds_3=0.5*(dummy_plus_2 - dummy_minus_2)/eps3;
+			
+			CEP.computeConstrainedEffectivePotential_secondDerivatives(mCentral, sCentral, d2U_ov_dmdm_orig, d2U_ov_dsds_orig, d2U_ov_dmds_orig);
+			
+			cout <<"2nd derivative from direct computation" <<endl;
+			cout <<"d2U/dm^2= " <<d2U_ov_dmdm_orig <<"     d2U/ds^2= " <<d2U_ov_dsds_orig <<"     d2U/dmds= " <<d2U_ov_dmds_orig <<endl;
+			cout <<"2nd derivatives from difference quotient of gradient:" <<endl;
+			cout <<"eps1= " <<eps1 <<"    d2U/dm^2= " <<d2U_ov_dmdm_1 <<"     d2U/ds^2= " <<d2U_ov_dsds_1 <<"     d2U/dmds= " <<d2U_ov_dmds_1 <<endl;
+			cout <<"eps2= " <<eps2 <<"    d2U/dm^2= " <<d2U_ov_dmdm_2 <<"     d2U/ds^2= " <<d2U_ov_dsds_2 <<"     d2U/dmds= " <<d2U_ov_dmds_2 <<endl;
+			cout <<"eps3= " <<eps3 <<"    d2U/dm^2= " <<d2U_ov_dmdm_3 <<"     d2U/ds^2= " <<d2U_ov_dsds_3 <<"     d2U/dmds= " <<d2U_ov_dmds_3 <<endl;
+			
+			cout <<"relative difference:" <<endl;
+			cout <<"eps1= " <<eps1 <<"     d^2U/dmdm: " <<2*(d2U_ov_dmdm_1-d2U_ov_dmdm_orig)/(d2U_ov_dmdm_1+d2U_ov_dmdm_orig) 
+			                       <<"     d^2U/dsds: " <<2*(d2U_ov_dsds_1-d2U_ov_dsds_orig)/(d2U_ov_dsds_1+d2U_ov_dsds_orig)
+			                       <<"     d^2U/dmds: " <<2*(d2U_ov_dmds_1-d2U_ov_dmds_orig)/(d2U_ov_dmds_1+d2U_ov_dmds_orig)  <<endl;
+			cout <<"eps2= " <<eps2 <<"     d^2U/dmdm: " <<2*(d2U_ov_dmdm_2-d2U_ov_dmdm_orig)/(d2U_ov_dmdm_2+d2U_ov_dmdm_orig) 
+			                       <<"     d^2U/dsds: " <<2*(d2U_ov_dsds_2-d2U_ov_dsds_orig)/(d2U_ov_dsds_2+d2U_ov_dsds_orig)
+			                       <<"     d^2U/dmds: " <<2*(d2U_ov_dmds_2-d2U_ov_dmds_orig)/(d2U_ov_dmds_2+d2U_ov_dmds_orig)  <<endl;
+			cout <<"eps3= " <<eps3 <<"     d^2U/dmdm: " <<2*(d2U_ov_dmdm_3-d2U_ov_dmdm_orig)/(d2U_ov_dmdm_3+d2U_ov_dmdm_orig) 
+			                       <<"     d^2U/dsds: " <<2*(d2U_ov_dsds_3-d2U_ov_dsds_orig)/(d2U_ov_dsds_3+d2U_ov_dsds_orig)
+			                       <<"     d^2U/dmds: " <<2*(d2U_ov_dmds_3-d2U_ov_dmds_orig)/(d2U_ov_dmds_3+d2U_ov_dmds_orig)  <<endl;
+		}
+		//just bosdet and 1st
+		{
+			cout <<endl;
+			cout <<"2nd derivatives just for BosDet and 1st order" <<endl;
+			double eps1=0.00001;
+			double dummy_plus_1_bos(0.0), dummy_plus_2_bos(0.0), dummy_minus_1_bos(0.0), dummy_minus_2_bos(0.0);
+			double dummy_plus_1_1st(0.0), dummy_plus_2_1st(0.0), dummy_minus_1_1st(0.0), dummy_minus_2_1st(0.0);
+			double d2U_ov_dmdm_bos(0.0), d2U_ov_dmdm_1st(0.0), d2U_ov_dmdm_orig_bos(0.0), d2U_ov_dmdm_orig_1st(0.0);
+			double d2U_ov_dsds_bos(0.0), d2U_ov_dsds_1st(0.0), d2U_ov_dsds_orig_bos(0.0), d2U_ov_dsds_orig_1st(0.0);
+			double d2U_ov_dmds_bos(0.0), d2U_ov_dmds_1st(0.0), d2U_ov_dmds_orig_bos(0.0), d2U_ov_dmds_orig_1st(0.0);
+			
+			CEP.computeImprovedBosDetAndFirstOrderContribution_onlyGradient_fromStoredSumOfCos(mCentral+eps1, sCentral, dummy_plus_1_bos, dummy_plus_2_bos, dummy_plus_1_1st, dummy_plus_2_1st);
+			CEP.computeImprovedBosDetAndFirstOrderContribution_onlyGradient_fromStoredSumOfCos(mCentral-eps1, sCentral, dummy_minus_1_bos, dummy_minus_2_bos, dummy_minus_1_1st, dummy_minus_2_1st);
+			d2U_ov_dmdm_bos=0.5*(dummy_plus_1_bos - dummy_minus_1_bos)/eps1;
+			d2U_ov_dmds_bos=0.5*(dummy_plus_2_bos - dummy_minus_2_bos)/eps1;
+			d2U_ov_dmdm_1st=0.5*(dummy_plus_1_1st - dummy_minus_1_1st)/eps1;
+			d2U_ov_dmds_1st=0.5*(dummy_plus_2_1st - dummy_minus_2_1st)/eps1;
+			
+			CEP.computeImprovedBosDetAndFirstOrderContribution_onlyGradient_fromStoredSumOfCos(mCentral, sCentral+eps1, dummy_plus_1_bos, dummy_plus_2_bos, dummy_plus_1_1st, dummy_plus_2_1st);
+			CEP.computeImprovedBosDetAndFirstOrderContribution_onlyGradient_fromStoredSumOfCos(mCentral, sCentral-eps1, dummy_minus_1_bos, dummy_minus_2_bos, dummy_minus_1_1st, dummy_minus_2_1st);
+			
+			d2U_ov_dsds_bos=0.5*(dummy_plus_2_bos - dummy_minus_2_bos)/eps1;
+			d2U_ov_dsds_1st=0.5*(dummy_plus_2_1st - dummy_minus_2_1st)/eps1;
+			
+			CEP.computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(mCentral, sCentral, d2U_ov_dmdm_orig_bos, d2U_ov_dsds_orig_bos, d2U_ov_dmds_orig_bos, d2U_ov_dmdm_orig_1st, d2U_ov_dsds_orig_1st, d2U_ov_dmds_orig_1st ); 
+			
+			cout <<"from direct computation:" <<endl;
+			cout <<"dBosdet/dmdm= " <<d2U_ov_dmdm_orig_bos <<"     dBosdet/dsds= " <<d2U_ov_dsds_orig_bos <<"     dBosdet/dmds= " <<d2U_ov_dmds_orig_bos <<endl;
+			cout <<"d1st/dmdm= " <<d2U_ov_dmdm_orig_1st <<"     d1st/dsds= " <<d2U_ov_dsds_orig_1st <<"     d1st/dmds= " <<d2U_ov_dmds_orig_1st <<endl;
+			cout <<"From the gradients: " <<endl;
+			cout <<"dBosdet/dmdm= " <<d2U_ov_dmdm_bos <<"     dBosdet/dsds= " <<d2U_ov_dsds_bos <<"     dBosdet/dmds= " <<d2U_ov_dmds_bos <<endl;
+			cout <<"d1st/dmdm= " <<d2U_ov_dmdm_1st <<"     d1st/dsds= " <<d2U_ov_dsds_1st <<"     d1st/dmds= " <<d2U_ov_dmds_1st <<endl;
+		}
 	}
 	
 	//test 1st order with improved determinant

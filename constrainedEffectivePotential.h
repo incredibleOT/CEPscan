@@ -222,12 +222,14 @@ class constrainedEffectivePotential
 	void compute_fermionicContribution_secondDerivatives_FromStoredEigenvalues(const double magnetization, const double staggeredMagnetization, double &d2Uf_ov_dmdm, double &d2Uf_ov_dsds, double &d2Uf_ov_dmds);
 	void fermionicContributionInline_secondDerivatives_FromStoredEigenvalues(int index, const double ySq_mSq, const double ySq_sSq, double &d2Uf_ov_dmdm, double &d2Uf_ov_dsds, double &d2Uf_ov_dmds);
 	
+	void compute_BosonicDeterminantContributionForImprovedGaussian_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2Udet_ov_dmdm, double &d2Udet_ov_dsds, double &d2Udet_ov_dmds);
+	
 	void computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2U_ov_dmdm, double &d2U_ov_dsds, double &d2U_ov_dmds);
 	void computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2U_BosDet_ov_dmdm, double &d2U_BosDet_ov_dsds, double &d2U_BosDet_ov_dmds, double &d2U_1st_ov_dmdm, double &d2U_1st_ov_dsds, double &d2U_1st_ov_dmds);
 	
 	
 	
-	void compute_BosonicDeterminantContributionForImprovedGaussian_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2Udet_ov_dmdm, double &d2Udet_ov_dsds, double &d2Udet_ov_dmds);
+	
 	
 
 	public: 

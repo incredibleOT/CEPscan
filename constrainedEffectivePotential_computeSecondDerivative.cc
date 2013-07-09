@@ -33,6 +33,10 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_secondD
 	//d^2U/dm^2 += -1/(2 V N_f) * sum_{p}[ (16*lambda_N + 216*lambda_6_N*(m^2 + s^2))/D_p   -  (( 16*lambda_N*m +  72*lambda_6_N*(m^3 + 3*m*s^2))/D_p )^2 ]
 	//d^2U/dm^2 += -1/(2 V N_f) * sum_{p}[ (16*lambda_N + 216*lambda_6_N*(m^2 + s^2))/D_p   -  (( 16*lambda_N*s +  72*lambda_6_N*(s^3 + 3*m^2*s))/D_p )^2 ]
 	//d^2U/dmds += -1/(2 V N_f) * sum_{p}[ (432*lambda_6_N*m*s)/D_p   -   ( ( 16*lambda_N*m +  72*lambda_6_N*(m^3 + 3*m*s^2)) * (16*lambda_N*s +  72*lambda_6_N*(s^3 + 3*m^2*s))/D_p^2 ) ]
+	//Notations in short (with shortcuts from below:
+	//d^2U/dm^2 += -1/(2N_f) * [ ( 16*lambda_N + 216*lambda_6N*(m^2+s^2))*P_B - D_m^2*P_B2 ]
+	//d^2U/ds^2 += -1/(2N_f) * [ ( 16*lambda_N + 216*lambda_6N*(m^2+s^2))*P_B - D_s^2*P_B2 ]
+	//d^2U/dmds += -1/(2N_f) * [ 432*lambda_6N * m * s * P_B  -  D_m*D_s*P_B2 ]
 	//NOTE, not both of the possibilities above can be used at the same time
 	//3rd: Also consider the first order in lambda and lambda_6 (makes only sence, if the improved tree-level is used)
 	//U+=8/N_f^2*(lambda_N + lambda_6N * (9*(m^2+s^2)))* P_B^2 + 24*lambda_6N/N_f^3*P_B^3
@@ -40,20 +44,27 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_secondD
 	//For the derivatives, i use the notation: P_Bn=1/V*sum_{p}1/ (D_p(m,s))^n 
 	//and the shortcut: 
 	//E=8/N_f^2*(lambda_N + 9*lambda_6N*(m^2 + s^2))  
-	//and F=24*lambda_6N/N_f^3 and 
+	//and 
+	//F=24*lambda_6N/N_f^3 and 
 	//D_m = dD_p(m,s)/d_m = 16*lambda_N*m + 72*lambda_6N*(m^3 + 3*m*s^2)
 	//D_s = dD_p(m,s)/d_s = 16*lambda_N*s + 72*lambda_6N*(s^3 + 3*m^2*s)
 	//dU/dm+=  144 * lambda_6N/N_f^2* m * P_B^2   -   2*E*D_m*P_B*P_B2   -   3*F*D_m*P_B^2*P_B2
 	//dU/ds+=  144 * lambda_6N/N_f^2* s * P_B^2   -   2*E*D_s*P_B*P_B2   -   3*F*D_s*P_B^2*P_B2
 	//
-	//d^2U/dm^2 +=  144 * lambda_6N/N_f^2 * P_B^2 - [ 288 * lambda_6N/N_f^2 * D_m  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
+	//d^2U/dm^2 +=  144 * lambda_6N/N_f^2 * P_B^2 
+	//            - [2 * 288 * lambda_6N/N_f^2 * m* D_m  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
 	//            + 2*E*D_m^2*[P_B2^2 + 2 * P_B * P_B3]
 	//            - 3*F*( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) * P_B^2 * P_B2
-	//            + 6*F*D_m^2*[ P_B * P_B2^2  -  P_B^2 * P_B3]
-	//d^2U/ds^2 +=  144 * lambda_6N/N_f^2 * P_B^2 - [ 288 * lambda_6N/N_f^2 * D_s  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
+	//            + 6*F*D_m^2*[ P_B * P_B2^2  +  P_B^2 * P_B3]
+	//d^2U/ds^2 +=  144 * lambda_6N/N_f^2 * P_B^2 
+	//            - [2 * 288 * lambda_6N/N_f^2 * s* D_s  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
 	//            + 2*E*D_s^2*[P_B2^2 + 2 * P_B * P_B3]
 	//            - 3*F*( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) * P_B^2 * P_B2
-	//            + 6*F*D_s^2*[ P_B * P_B2^2  -  P_B^2 * P_B3]
+	//            + 6*F*D_s^2*[ P_B * P_B2^2  +  P_B^2 * P_B3]
+	//d^2U/dmds +=  [ -288*lambda_6N/N_f^2 * ( m*D_s + s*D_m ) - 2*E*(432*lambda_6N*m*s) ] * P_B * P_B2
+	//                 + 2*E*D_m*D_s*[ P_B2^2 + 2 * P_B * P_B3 ]
+	//                 - 3*F*(432*lambda_6N*m*s) * P_B^2 * P_B2
+	//                 + 6*F*D_m*D_s*[ P_B * P_B2^2 + P_B^2 * P_B3 ]
 	
 	if(useBosonicLoop && useImprovedGaussian)
 	{
@@ -83,13 +94,21 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_secondD
 	d2U_ov_dmds+= 24.0*lambda_N*magnetization*staggeredMagnetization;
 	d2U_ov_dmds+= lambda_6_N*(120.0*mSq*magnetization*staggeredMagnetization + 120.0*magnetization*sSq*staggeredMagnetization);
 	
-	if(useImprovedGaussian)
+	if(useImprovedGaussian && !useImprovedFirstOrder)
 	{
 		double bosDet_ov_dmdm(0.0), bosDet_ov_dsds(0.0), bosDet_ov_dmds(0.0);
 		compute_BosonicDeterminantContributionForImprovedGaussian_secondDerivatives_fromStoredSumOfCos(magnetization, staggeredMagnetization, bosDet_ov_dmdm, bosDet_ov_dsds, bosDet_ov_dmds);
 		d2U_ov_dmdm+=bosDet_ov_dmdm;
 		d2U_ov_dsds+=bosDet_ov_dsds;
 		d2U_ov_dmds+=bosDet_ov_dmds;
+	}
+	else if(useImprovedFirstOrder)
+	{
+		double dBosDetAnd1stOrder_dmdm(0.0), dBosDetAnd1stOrder_dsds(0.0), dBosDetAnd1stOrder_dmds(0.0);
+		computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(magnetization, staggeredMagnetization, dBosDetAnd1stOrder_dmdm, dBosDetAnd1stOrder_dsds, dBosDetAnd1stOrder_dmds);
+		d2U_ov_dmdm += dBosDetAnd1stOrder_dmdm;
+		d2U_ov_dsds += dBosDetAnd1stOrder_dsds;
+		d2U_ov_dmds += dBosDetAnd1stOrder_dmds;
 	}
 }
 
@@ -203,5 +222,109 @@ void constrainedEffectivePotential::compute_BosonicDeterminantContributionForImp
 
 
 
-void computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2U_ov_dmdm, double &d2U_ov_dsds, double &d2U_ov_dmds);
-	void computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2U_BosDet_ov_dmdm, double &d2U_BosDet_ov_dsds, double &d2U_BosDet_ov_dmds, double &d2U_1st_ov_dmdm, double &d2U_1st_ov_dsds, double &d2U_1st_ov_dmds);
+void constrainedEffectivePotential::computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2U_ov_dmdm, double &d2U_ov_dsds, double &d2U_ov_dmds)
+{
+	double d2U_BosDet_ov_dmdm(0.0), d2U_BosDet_ov_dsds(0.0), d2U_BosDet_ov_dmds(0.0), d2U_1st_ov_dmdm(0.0), d2U_1st_ov_dsds(0.0), d2U_1st_ov_dmds(0.0);
+	computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(magnetization, staggeredMagnetization, d2U_BosDet_ov_dmdm, d2U_BosDet_ov_dsds, d2U_BosDet_ov_dmds, d2U_1st_ov_dmdm, d2U_1st_ov_dsds, d2U_1st_ov_dmds);
+	d2U_ov_dmdm = d2U_BosDet_ov_dmdm + d2U_1st_ov_dmdm;
+	d2U_ov_dsds = d2U_BosDet_ov_dsds + d2U_1st_ov_dsds;
+	d2U_ov_dmds = d2U_BosDet_ov_dmds + d2U_1st_ov_dmds;
+}
+
+
+void constrainedEffectivePotential::computeImprovedBosDetAndFirstOrderContribution_secondDerivatives_fromStoredSumOfCos(const double magnetization, const double staggeredMagnetization, double &d2U_BosDet_ov_dmdm, double &d2U_BosDet_ov_dsds, double &d2U_BosDet_ov_dmds, double &d2U_1st_ov_dmdm, double &d2U_1st_ov_dsds, double &d2U_1st_ov_dmds)
+{
+	//d^2U_BosDet/dm^2 = -1/(2N_f) * [ ( 16*lambda_N + 216*lambda_6N*(m^2+s^2))*P_B - D_m^2*P_B2 ]
+	//d^2U_BosDet/ds^2 = -1/(2N_f) * [ ( 16*lambda_N + 216*lambda_6N*(m^2+s^2))*P_B - D_s^2*P_B2 ]
+	//d^2U_BosDet/dmds = -1/(2N_f) * [ 432*lambda_6N * m * s * P_B  -  D_m*D_s*P_B2 ]
+	//d^2U_1st/dm^2  =  144 * lambda_6N/N_f^2 * P_B^2 
+	//            - [2 * 288 * lambda_6N/N_f^2 * m* D_m  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
+	//            + 2*E*D_m^2*[P_B2^2 + 2 * P_B * P_B3]
+	//            - 3*F*( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) * P_B^2 * P_B2
+	//            + 6*F*D_m^2*[ P_B * P_B2^2  +  P_B^2 * P_B3]
+	//d^2U_1st/ds^2  =  144 * lambda_6N/N_f^2 * P_B^2 
+	//            - [2 * 288 * lambda_6N/N_f^2 * s* D_s  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
+	//            + 2*E*D_s^2*[P_B2^2 + 2 * P_B * P_B3]
+	//            - 3*F*( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) * P_B^2 * P_B2
+	//            + 6*F*D_s^2*[ P_B * P_B2^2  +  P_B^2 * P_B3]
+	//d^2U_1st/dmds  =  [ -288*lambda_6N/N_f^2 * ( m*D_s + s*D_m ) - 2*E*(432*lambda_6N*m*s) ] * P_B * P_B2
+	//                 + 2*E*D_m*D_s*[ P_B2^2 + 2 * P_B * P_B3 ]
+	//                 - 3*F*(432*lambda_6N*m*s) * P_B^2 * P_B2
+	//                 + 6*F*D_m*D_s*[ P_B * P_B2^2 + P_B^2 * P_B3 ]
+	
+	double mSq(magnetization*magnetization), sSq(staggeredMagnetization*staggeredMagnetization);
+	double constantPart(2.0 - 4.0*lambda_N + 8.0*lambda_N*( mSq + sSq ) + 18.0*lambda_6_N*(mSq*mSq + sSq*sSq + 6.0*mSq*sSq) );
+	double fourKappa=4.0*kappa_N;
+	
+	d2U_BosDet_ov_dmdm=0.0; d2U_1st_ov_dmdm=0.0;
+	d2U_BosDet_ov_dsds=0.0; d2U_1st_ov_dsds=0.0;
+	d2U_BosDet_ov_dmds=0.0; d2U_1st_ov_dmds=0.0;
+	
+	double dummy;
+	double dummyForAddition(0.0), dummyForSquaredAddition(0.0), dummyForCubicAddition(0.0);
+	for(int index=0; index<numberOfDistingtMomenta_bosonic; ++index)
+	{
+		dummy=1.0/(constantPart - fourKappa*sumOfCosOfPmu[index]);
+		dummyForAddition        += factorOfMomentum_bosonic[index]*dummy;
+		dummyForSquaredAddition += factorOfMomentum_bosonic[index]*dummy*dummy;
+		dummyForCubicAddition   += factorOfMomentum_bosonic[index]*dummy*dummy*dummy;
+	}
+
+	double loopFac=8.0/static_cast< double >(N_f*N_f)*(lambda_N + 9.0*lambda_6_N*(mSq+sSq));
+	double dmFac(16.0*lambda_N*magnetization + 72.0*lambda_6_N*(mSq*magnetization + 3.0*magnetization*sSq));
+	double dsFac(16.0*lambda_N*staggeredMagnetization + 72.0*lambda_6_N*(sSq*staggeredMagnetization + 3.0*mSq*staggeredMagnetization));
+	double dmdmFac(16.0*lambda_N + 216.0*lambda_6_N*(mSq + sSq));
+	double dsdsFac( dmdmFac ); //they are equal but it looks nicer
+	
+	dummyForAddition/=static_cast< double >(L0); dummyForAddition/=static_cast< double >(L1); dummyForAddition/=static_cast< double >(L2); dummyForAddition/=static_cast< double >(L3); 
+	
+	dummyForSquaredAddition/=static_cast< double >(L0); dummyForSquaredAddition/=static_cast< double >(L1); dummyForSquaredAddition/=static_cast< double >(L2); dummyForSquaredAddition/=static_cast< double >(L3); 
+	
+	dummyForCubicAddition/=static_cast< double >(L0); dummyForCubicAddition/=static_cast< double >(L1); dummyForCubicAddition/=static_cast< double >(L2); dummyForCubicAddition/=static_cast< double >(L3); 
+	
+	//d^2U_BosDet/dm^2 += -1/(2N_f) * [ ( 16*lambda_N + 216*lambda_6N*(m^2+s^2))*P_B - D_m^2*P_B2 ]
+	//d^2U_BosDet/ds^2 += -1/(2N_f) * [ ( 16*lambda_N + 216*lambda_6N*(m^2+s^2))*P_B - D_s^2*P_B2 ]
+	//d^2U_BosDet/dmds += -1/(2N_f) * [ 432*lambda_6N * m * s * P_B  -  D_m*D_s*P_B2 ]
+	
+	d2U_BosDet_ov_dmdm = -0.5*( dmdmFac * dummyForAddition - dmFac*dmFac*dummyForSquaredAddition )/static_cast< double >(N_f); 
+	d2U_BosDet_ov_dsds = -0.5*( dsdsFac * dummyForAddition - dsFac*dsFac*dummyForSquaredAddition )/static_cast< double >(N_f); 
+	d2U_BosDet_ov_dmds = -0.5*(432.0 * lambda_6_N * magnetization * staggeredMagnetization *dummyForAddition - dmFac*dsFac*dummyForSquaredAddition )/static_cast< double >(N_f); 
+	
+	//d^2U_1st/dm^2 =  144 * lambda_6N/N_f^2 * P_B^2 
+	//            - [2 * 288 * lambda_6N/N_f^2 * m* D_m  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
+	//            + 2*E*D_m^2*[P_B2^2 + 2 * P_B * P_B3]
+	//            - 3*F*( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) * P_B^2 * P_B2
+	//            + 6*F*D_m^2*[ P_B * P_B2^2  +  P_B^2 * P_B3]
+	
+	d2U_1st_ov_dmdm = 144.0*lambda_6_N/static_cast< double >(N_f*N_f)*dummyForAddition*dummyForAddition;
+	d2U_1st_ov_dmdm-= ( 2.0*288.0*lambda_6_N/static_cast< double >(N_f*N_f) * magnetization * dmFac  +  2.0*loopFac*dmdmFac ) * dummyForAddition * dummyForSquaredAddition; 
+	d2U_1st_ov_dmdm+= 2.0 * loopFac * dmFac * dmFac * ( dummyForSquaredAddition*dummyForSquaredAddition + 2.0 * dummyForAddition * dummyForCubicAddition );
+	d2U_1st_ov_dmdm-= 72.0 * lambda_6_N/static_cast< double >(N_f*N_f*N_f)*dmdmFac * dummyForAddition*dummyForAddition*dummyForSquaredAddition;
+	d2U_1st_ov_dmdm+= 144.0 * lambda_6_N/static_cast< double >(N_f*N_f*N_f)*dmFac*dmFac * ( dummyForAddition * dummyForSquaredAddition * dummyForSquaredAddition  +  dummyForAddition * dummyForAddition * dummyForCubicAddition );
+	
+	//d^2U_1st/ds^2 =  144 * lambda_6N/N_f^2 * P_B^2 
+	//            - [2 * 288 * lambda_6N/N_f^2 * s* D_s  +  2*E * ( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) ] * P_B * P_B2
+	//            + 2*E*D_s^2*[P_B2^2 + 2 * P_B * P_B3]
+	//            - 3*F*( 16*lambda_N + 216*lambda_6N*(m^2+s^2)) * P_B^2 * P_B2
+	//            + 6*F*D_s^2*[ P_B * P_B2^2  +  P_B^2 * P_B3]
+	
+	d2U_1st_ov_dsds = 144.0*lambda_6_N/static_cast< double >(N_f*N_f)*dummyForAddition*dummyForAddition;
+	d2U_1st_ov_dsds-= (2.0 * 288.0*lambda_6_N/static_cast< double >(N_f*N_f) * staggeredMagnetization * dsFac  +  2.0*loopFac*dsdsFac ) * dummyForAddition * dummyForSquaredAddition; 
+	d2U_1st_ov_dsds+= 2.0 * loopFac * dsFac * dsFac * ( dummyForSquaredAddition*dummyForSquaredAddition + 2.0*dummyForAddition*dummyForCubicAddition );
+	d2U_1st_ov_dsds-= 72.0 * lambda_6_N/static_cast< double >(N_f*N_f*N_f)*dsdsFac * dummyForAddition*dummyForAddition*dummyForSquaredAddition;
+	d2U_1st_ov_dsds+= 144.0 * lambda_6_N/static_cast< double >(N_f*N_f*N_f)*dsFac*dsFac * ( dummyForAddition * dummyForSquaredAddition * dummyForSquaredAddition  +  dummyForAddition * dummyForAddition * dummyForCubicAddition );
+	
+	//d^2U_1st/dmds  =  [ -288*lambda_6N/N_f^2 * ( m*D_s + s*D_m ) - 2*E*(432*lambda_6N*m*s) ] * P_B * P_B2
+	//                 + 2*E*D_m*D_s*[ P_B2^2 + 2 * P_B * P_B3 ]
+	//                 - 3*F*(432*lambda_6N*m*s) * P_B^2 * P_B2
+	//                 + 6*F*D_m*D_s*[ P_B * P_B2^2 + P_B^2 * P_B3 ]
+	
+	d2U_1st_ov_dmds = ( -288.0*lambda_6_N/static_cast< double >(N_f*N_f) * (magnetization*dsFac + staggeredMagnetization*dmFac) - 2.0*loopFac * ( 432.0 * lambda_6_N * magnetization * staggeredMagnetization) ) * dummyForAddition * dummyForSquaredAddition;
+	d2U_1st_ov_dmds+= 2.0*loopFac*dmFac*dsFac*( dummyForSquaredAddition*dummyForSquaredAddition + 2.0*dummyForAddition*dummyForCubicAddition );
+	d2U_1st_ov_dmds-= 72.0 * lambda_6_N/static_cast< double >(N_f*N_f*N_f) * ( 432.0 * lambda_6_N * magnetization * staggeredMagnetization) * dummyForAddition * dummyForAddition * dummyForSquaredAddition;
+	d2U_1st_ov_dmds+= 144.0 * lambda_6_N/static_cast< double >(N_f*N_f*N_f) *dmFac*dsFac * ( dummyForAddition*dummyForSquaredAddition*dummyForSquaredAddition + dummyForAddition*dummyForAddition*dummyForCubicAddition );
+}
+
+
+
+
