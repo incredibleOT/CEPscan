@@ -87,6 +87,7 @@ void constrainedEffectivePotential::computeConstrainedEffectivePotential_Functio
 		dU_ov_dm+=dBosDetAnd1stOrder_dm;
 		dU_ov_ds+=dBosDetAnd1stOrder_ds;
 	}
+	if(U!=U){U=-log(0.0);}
 }
 
 
@@ -249,11 +250,11 @@ void constrainedEffectivePotential::computeImprovedBosDetAndFirstOrderContributi
 	
 	dU_1st_ov_dm = 144.0/static_cast< double >(N_f*N_f)*lambda_6_N*magnetization*dummyForAddition*dummyForAddition;
 	dU_1st_ov_dm+= -2.0*loopFac*dmFac*dummyForAddition*dummyForSquaredAddition;
-	dU_1st_ov_dm+= -72.0*lambda_6_N*dmFac*dummyForAddition*dummyForAddition*dummyForSquaredAddition;
+	dU_1st_ov_dm+= -72.0*lambda_6_N/static_cast< double >(N_f*N_f*N_f)*dmFac*dummyForAddition*dummyForAddition*dummyForSquaredAddition;
 	
 	dU_1st_ov_ds = 144.0/static_cast< double >(N_f*N_f)*lambda_6_N*staggeredMagnetization*dummyForAddition*dummyForAddition;
 	dU_1st_ov_ds+= -2.0*loopFac*dsFac*dummyForAddition*dummyForSquaredAddition;
-	dU_1st_ov_ds+= -72.0*lambda_6_N*dsFac*dummyForAddition*dummyForAddition*dummyForSquaredAddition;
+	dU_1st_ov_ds+= -72.0*lambda_6_N/static_cast< double >(N_f*N_f*N_f)*dsFac*dummyForAddition*dummyForAddition*dummyForSquaredAddition;
 	
 	
 }

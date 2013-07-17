@@ -41,6 +41,8 @@ void CEPscan_helper::prepareParameterMaps( std::map< std::string, double > &para
 	
 	paraI["use_improved_treeLevel"]=0;
 	
+	paraI["use_improved_firstOrder"]=0;
+	
 	//directly set to default values
 	paraI["N_f"]=1;
 	paraD["rho"]=1.0;
@@ -309,6 +311,11 @@ bool CEPscan_helper::checkConsistencyOfParameters( std::map< std::string, double
 			std::cerr <<"Error, cannot use use_improved_treeLevel and include_bosonic_loop at the same time" <<std::endl;
 			return false;
 		}
+		if( paraIsSet["use_improved_firstOrder"] && paraI["use_improved_firstOrder"] )
+		{
+			std::cerr <<"Error, cannot use use_improved_firstOrder and include_bosonic_loop at the same time" <<std::endl;
+			return false;
+		}
 	}
 	
 	
@@ -316,6 +323,13 @@ bool CEPscan_helper::checkConsistencyOfParameters( std::map< std::string, double
 	if( !paraIsSet["use_improved_treeLevel"] )
 	{
 		std::cerr <<"Error, use_improved_treeLevel not set" <<std::endl;
+		return false;
+	}
+	
+	//use_improved_firstOrder
+	if( paraIsSet["use_improved_firstOrder"] && paraI["use_improved_firstOrder"] && !paraI["use_improved_treeLevel"])
+	{
+		std::cerr <<"Error, use_improved_firstOrder only works with use_improved_treeLevel also set" <<std::endl;
 		return false;
 	}
 	
@@ -428,7 +442,7 @@ void CEPscan_helper::findStartByTwo_1d_Scans(std::set< double > &testValues_magn
 // 		std::cout <<"log(0.0)=" <<log(0) <<std::endl;
 // 		std::cout <<"(log(0)<1.0) returns: " <<(log(0)<1.0) <<"   (log(0)>1.0) returns: " <<(log(0)>1.0) <<std::endl;
 // 	}
-	if(smallestResult!=smallestResult){ smallestResult=-log(0); }
+	if(smallestResult!=smallestResult){ smallestResult=-log(0.0); }
 	start_m=*testValues_magnetization.begin();
 	start_s=*testValues_staggeredMagnetization.begin();
 	double testResult(0.0);
@@ -436,7 +450,7 @@ void CEPscan_helper::findStartByTwo_1d_Scans(std::set< double > &testValues_magn
 	for(std::set< double >::iterator magIter=++testValues_magnetization.begin(); magIter!=testValues_magnetization.end(); ++magIter)
 	{
 		testResult=CEP.computeConstrainedEffectivePotential_onlyFunction(*magIter, *testValues_staggeredMagnetization.begin());
-		if(testResult!=testResult){ testResult=-log(0); }
+		if(testResult!=testResult){ testResult=-log(0.0); }
 // 		std::cout <<"scan: U(" <<*magIter<<", " <<*testValues_staggeredMagnetization.begin() <<")=" <<testResult <<std::endl;
 		if(testResult < smallestResult)
 		{
@@ -448,7 +462,7 @@ void CEPscan_helper::findStartByTwo_1d_Scans(std::set< double > &testValues_magn
 	for(std::set< double >::iterator stagIter=++testValues_staggeredMagnetization.begin(); stagIter!=testValues_staggeredMagnetization.end(); ++stagIter)
 	{
 		testResult=CEP.computeConstrainedEffectivePotential_onlyFunction(*testValues_magnetization.begin(), *stagIter);
-		if(testResult!=testResult){ testResult=-log(0); }
+		if(testResult!=testResult){ testResult=-log(0.0); }
 // 		std::cout <<"scan: U(" <<*testValues_magnetization.begin()<<", " <<*stagIter <<")=" <<testResult <<std::endl;
 		if(testResult < smallestResult)
 		{
@@ -481,7 +495,7 @@ void CEPscan_helper::findStartByOne_2d_Scan(std::set< double > &testValues_magne
 		for(std::set< double >::iterator stagIter=++testValues_staggeredMagnetization.begin(); stagIter!=testValues_staggeredMagnetization.end(); ++stagIter)
 		{
 			testResult=CEP.computeConstrainedEffectivePotential_onlyFunction(*magIter, *stagIter);
-			if(testResult!=testResult){ testResult=-log(0); }
+			if(testResult!=testResult){ testResult=-log(0.0); }
 // 			std::cout <<"scan: U(" <<*magIter<<", " <<*stagIter <<")=" <<testResult <<std::endl;
 			if(testResult < smallestResult)
 			{

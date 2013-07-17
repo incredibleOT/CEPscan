@@ -27,8 +27,11 @@ The following things can be specified:
  
  - use_improved_treeLevel     (whether the gaussian part of the action recieves contributions from the quartic and phi^6 term - With that, the 
                           bosonic determinant cannot be neglected anymore, since it now depends on m and s. Cannot be used together with 
-                          include_bosonic_loop)
-
+                          include_bosonic_loop, obligatory)
+ - use_improved_firstOrder     (includes the first order in lambda and lambda_6 for the case of improved treelevel. 
+                                If set, use_improved_treeLevel has to be set too, default is 0)
+ 
+ 
  - N_f   default=1 
  - rho   default=1.0
  - r     default = 0.5

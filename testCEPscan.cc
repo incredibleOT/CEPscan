@@ -23,7 +23,7 @@ int main(int narg,char **arg)
 // 	int L0(6), L1(6), L2(6), L3(6);
 // 	int L0(32), L1(32), L2(32), L3(64);
 // 	int L0(64), L1(64), L2(64), L3(128);
-	int L0(8), L1(10), L2(14), L3(22);
+	int L0(12), L1(12), L2(12), L3(12);
 // 	bool antiL3(false);
 	bool antiL3(false);
 	
@@ -31,11 +31,13 @@ int main(int narg,char **arg)
 	double y=0.75;
 	
 	double kappa=+0.1;
-	double lambda=0.05;
-	double lambda_6=0.1;
+	double lambda=-0.1;
+	double lambda_6=0.2;
+	int N_f=1;
 	
 	constrainedEffectivePotential CEP(L0,L1,L2,L3,antiL3);
 	cout <<"constrainedEffectivePotential initialized" <<endl;
+	CEP.set_N_f(N_f);
 	CEP.set_yukawa_N(y);
 	CEP.set_kappa_N(kappa);
 	CEP.set_lambda_N(lambda);
@@ -46,37 +48,7 @@ int main(int narg,char **arg)
 	CEP.set_useImprovedFirstOrder(true);
 	
 	//test bosonic determinant
-	if(false)
-	{
-		double mCentral=0.2;
-		double sCentral=0.4;
-		int NumberOfIterations=1;
-		
-		double qad_determinant(0);
-		for(int i=0; i<NumberOfIterations; ++i)
-		{
-			qad_determinant=CEP.computeBosonicDeterminantContributionForImprovedGaussian_onlyFunction_qad(mCentral, sCentral);
-		}
-		cout <<endl <<"Bosonic derterminant qad: " <<qad_determinant <<endl;
-		
-		double fromStored_determinant(0);
-		for(int i=0; i<NumberOfIterations; ++i)
-		{
-			fromStored_determinant=CEP.computeBosonicDeterminantContributionForImprovedGaussian_onlyFunction_fromStoredSumOfCos(mCentral, sCentral);
-		}
-		cout <<endl <<"Bosonic derterminant from stored: " <<fromStored_determinant <<endl;
-		
-		double fromStored_dDet_dm(0.0), fromStored_dDet_ds(0.0);
-		for(int i=0; i<NumberOfIterations; ++i)
-		{
-			CEP.computeBosonicDeterminantContributionForImprovedGaussian_onlyGradient_fromStoredSumOfCos(mCentral, sCentral, fromStored_dDet_dm, fromStored_dDet_ds);
-		}
-		cout <<endl <<"Bosonic derterminant_ov_dm from stored: " <<fromStored_dDet_dm <<"    Bosonic derterminant_ov_ds from stored: " <<fromStored_dDet_ds <<endl;
-		
-		double fromStoredComb_U, fromStoredComb_dm, fromStoredComb_ds;
-		CEP.computeBosonicDeterminantContributionForImprovedGaussian_FunctionAndGradient_fromStoredSumOfCos(mCentral, sCentral, fromStoredComb_U, fromStoredComb_dm, fromStoredComb_ds);
-		cout <<endl <<"bosDet from comb: " <<fromStoredComb_U <<"   dm:" <<fromStoredComb_dm <<"    ds: " <<fromStoredComb_ds <<endl;
-	}
+	
 	
 	//test individual parts
 	if(true)
@@ -85,8 +57,8 @@ int main(int narg,char **arg)
 		int l0(0),l1(0),l2(0),l3(0);
 		CEP.get_extends(l0,l1,l2,l3);
 		
-		double mCentral=0.2;
-		double sCentral=0.4;
+		double mCentral=0.02;
+		double sCentral=0.0004;
 		cout <<"Lattice: " <<l0 <<" x " <<l1 <<" x " <<l2 <<" x " <<l3 <<endl;
 		cout <<"N_f: " <<CEP.get_N_f() <<endl;
 		cout <<"y_N: " <<CEP.get_yukawa_N() <<endl;
@@ -342,6 +314,39 @@ int main(int narg,char **arg)
 			cout <<"d1st/dmdm= " <<d2U_ov_dmdm_1st <<"     d1st/dsds= " <<d2U_ov_dsds_1st <<"     d1st/dmds= " <<d2U_ov_dmds_1st <<endl;
 		}
 	}
+	
+	if(false)
+	{
+		double mCentral=0.02;
+		double sCentral=0.0004;
+		int NumberOfIterations=1;
+		
+		double qad_determinant(0);
+		for(int i=0; i<NumberOfIterations; ++i)
+		{
+			qad_determinant=CEP.computeBosonicDeterminantContributionForImprovedGaussian_onlyFunction_qad(mCentral, sCentral);
+		}
+		cout <<endl <<"Bosonic derterminant qad: " <<qad_determinant <<endl;
+		
+		double fromStored_determinant(0);
+		for(int i=0; i<NumberOfIterations; ++i)
+		{
+			fromStored_determinant=CEP.computeBosonicDeterminantContributionForImprovedGaussian_onlyFunction_fromStoredSumOfCos(mCentral, sCentral);
+		}
+		cout <<endl <<"Bosonic derterminant from stored: " <<fromStored_determinant <<endl;
+		
+		double fromStored_dDet_dm(0.0), fromStored_dDet_ds(0.0);
+		for(int i=0; i<NumberOfIterations; ++i)
+		{
+			CEP.computeBosonicDeterminantContributionForImprovedGaussian_onlyGradient_fromStoredSumOfCos(mCentral, sCentral, fromStored_dDet_dm, fromStored_dDet_ds);
+		}
+		cout <<endl <<"Bosonic derterminant_ov_dm from stored: " <<fromStored_dDet_dm <<"    Bosonic derterminant_ov_ds from stored: " <<fromStored_dDet_ds <<endl;
+		
+		double fromStoredComb_U, fromStoredComb_dm, fromStoredComb_ds;
+		CEP.computeBosonicDeterminantContributionForImprovedGaussian_FunctionAndGradient_fromStoredSumOfCos(mCentral, sCentral, fromStoredComb_U, fromStoredComb_dm, fromStoredComb_ds);
+		cout <<endl <<"bosDet from comb: " <<fromStoredComb_U <<"   dm:" <<fromStoredComb_dm <<"    ds: " <<fromStoredComb_ds <<endl;
+	}
+	
 	
 	//test 1st order with improved determinant
 	if(false)

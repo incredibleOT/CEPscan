@@ -57,6 +57,7 @@ double constrainedEffectivePotential::computeConstrainedEffectivePotential_onlyF
 		double bosDetAnd1stOrder( computeImprovedBosDetAndFirstOrderContribution_onlyFunction_fromStoredSumOfCos(magnetization, staggeredMagnetization) );
 		result+=bosDetAnd1stOrder;
 	}
+	if(result!=result){result=-log(0.0);}
 	return result;
 }
 
