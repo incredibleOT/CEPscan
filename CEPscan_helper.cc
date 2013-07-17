@@ -415,6 +415,12 @@ void CEPscan_helper::fillSetWithRange( const double min, const double max, const
 {
 	toFill.clear();
 	
+	if( (max-min)/step < 0 )
+	{
+		std::cerr <<"Error, unreasonable scanrange: min: " <<min <<", max: " <<max <<", step: " <<step <<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	
 	int numberOfEntries=static_cast< int >( (max-min)/step + 1.5);
 	
 	for( int i=0; i<numberOfEntries; ++i)
